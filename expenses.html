@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biznance – [Expenses]</title>
+
+  <!-- TailwindCSS + Custom Config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            green: '#22DD86',
+            blue: '#3B82F6',
+            black: '#1E1E1E',
+            white: '#F9F9F9'
+          },
+          fontFamily: {
+            sans: ['ui-sans-serif', 'system-ui']
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-white dark:bg-black text-black dark:text-white font-sans min-h-screen flex flex-col">
+
+  <!-- Header will auto-load here -->
+  <div id="header"></div>
+
+  <!-- Main page content will go here later -->
+  <main class="flex-1">
+    <!-- Placeholder content -->
+  </main>
+
+  <!-- Footer will auto-load here -->
+  <div id="footer"></div>
+
+  <script src="/js/components.js"></script>
+</body>
+</html>
