@@ -1,1 +1,31 @@
-/* Biznance base styles */
+/* Base Styles for Biznance */
+
+/* Make sure everything uses border-box sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Reset margins and padding */
+body, h1, h2, h3, p, ul, ol, figure, blockquote, dl, dd {
+  margin: 0;
+  padding: 0;
+}
+
+/* Set default font family */
+body {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background-color: #F9F9F9; /* Light background */
+  color: #1E1E1E; /* Dark text */
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Default link style */
+a {
+  color: #3B82F6; /* Blue links */
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
