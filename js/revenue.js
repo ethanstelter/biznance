@@ -1,3 +1,5 @@
+const currentBusinessId = localStorage.getItem("businessId") || "default";
+
 // revenue.js
 
 // Assumes firebase was already initialized in the HTML page
