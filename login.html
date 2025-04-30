@@ -70,15 +70,12 @@
     }
   }
 </script>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+<!-- Firebase v8 SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+<!-- Firebase config and init -->
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyCo5DMir__Aahm2jFjHrE5FMVMiw0SHJKg",
     authDomain: "biznance-22126.firebaseapp.com",
@@ -89,10 +86,11 @@
     measurementId: "G-045HJ2KPJP"
   };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
 </script>
+
+<!-- Login form logic -->
 <script>
   const loginForm = document.getElementById('login-form');
   const errorEl = document.getElementById('login-error');
@@ -103,10 +101,11 @@
     const password = loginForm.password.value;
 
     try {
-      await firebase.auth().signInWithEmailAndPassword(email, password);
+      await auth.signInWithEmailAndPassword(email, password);
       window.location.href = "/dashboard.html";
     } catch (err) {
       errorEl.textContent = err.message;
     }
   });
 </script>
+
