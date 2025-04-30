@@ -1,3 +1,5 @@
+const currentBusinessId = localStorage.getItem("businessId") || "default";
+
 // expense.js
 
 firebase.auth().onAuthStateChanged(user => {
