@@ -14,6 +14,7 @@ firebase.auth().onAuthStateChanged(user => {
 
       const category = form.category.value;
       const amount = parseFloat(form.amount.value);
+      const isRecurring = document.getElementById("recurring-expense").checked;
 
       try {
         await db.collection("expenses").add({
@@ -22,6 +23,15 @@ firebase.auth().onAuthStateChanged(user => {
           amount: amount,
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
+if (isRecurring) {
+  await db.collection("recurring").add({
+    uid: user.uid,
+    type: "expense",
+    category: category,
+    amount: amount,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
 
         status.textContent = "✅ Expense saved!";
         status.style.color = "green";
