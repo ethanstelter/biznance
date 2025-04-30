@@ -20,10 +20,12 @@ async function loadRevenueEntries() {
   list.innerHTML = "<p class='text-gray-500 text-center'>Loading...</p>";
 
   try {
-    const snapshot = await db.collection("revenue")
-      .where("uid", "==", user.uid)
-      .orderBy("timestamp", "desc")
-      .get();
+   const snapshot = await db.collection("revenue")
+  .where("uid", "==", user.uid)
+  .where("businessId", "==", currentBusinessId)
+  .orderBy("timestamp")
+  .get();
+
 
     if (snapshot.empty) {
       list.innerHTML = "<p class='text-gray-500 text-center'>No revenue entries yet.</p>";
@@ -90,6 +92,7 @@ loadRevenueEntries();
   if (isRecurring) {
     await db.collection("recurring").add({
       uid: user.uid,
+      businessId: currentBusinessId,
       type: "revenue",
       source: source,
       amount: amount,
