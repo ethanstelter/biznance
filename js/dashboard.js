@@ -134,19 +134,18 @@ setTimeout(() => {
   const endDate = document.getElementById("endDate");
   const customInputs = document.getElementById("customDateInputs");
 
- timeFilter.addEventListener("change", () => {
+timeFilter.addEventListener("change", () => {
   const value = timeFilter.value;
   customInputs.classList.toggle("hidden", value !== "custom");
 
-  // ✅ Add this to clear previously shown charts when selecting custom
   if (value === "custom") {
-    // Clear charts and wait for user to fill in dates
     console.log("🕓 Waiting for custom date input...");
     return;
   }
 
   loadAllCharts();
-});
+}); // ✅ this closes the addEventListener correctly
+
 
 
   startDate.addEventListener("change", loadAllCharts);
