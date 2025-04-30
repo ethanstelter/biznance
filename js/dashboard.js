@@ -83,9 +83,20 @@ function renderChart(id, label, data, color) {
       renderChart("profitChart", "Profit ($)", profitData, "#1E1E1E");
     }
 
-   window.onload = () => {
-  loadAllCharts();
-};
+  window.addEventListener("DOMContentLoaded", () => {
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "/login.html";
+    } else {
+      // Put all your existing logic here:
+      // fetchData(), renderChart(), loadAllCharts(), etc.
+
+      // AND call loadAllCharts() here
+      loadAllCharts();
+    }
+  });
+});
+
 
   }
 });
