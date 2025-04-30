@@ -31,7 +31,7 @@ function renderChart(id, label, data, color) {
     console.log(`❌ Canvas element with id "${id}" not found.`);
     return;
   }
-
+console.log("🎯 Checking canvas element:", id, canvas);
   const ctx = canvas.getContext("2d");
   console.log("🖌️ Canvas context for", id, ":", ctx);
 
