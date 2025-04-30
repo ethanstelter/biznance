@@ -81,12 +81,14 @@ loadRevenueEntries();
 
    try {
   // First: Add the revenue entry
-  await db.collection("revenue").add({
-    uid: user.uid,
-    source: source,
-    amount: amount,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  });
+await db.collection("revenue").add({
+  uid: user.uid,
+  businessId: currentBusinessId, // ✅ ADD THIS
+  source: source,
+  amount: amount,
+  timestamp: firebase.firestore.FieldValue.serverTimestamp()
+});
+
 
   // Then: If recurring, also save it to the "recurring" collection
   if (isRecurring) {
