@@ -1,3 +1,5 @@
+const currentBusinessId = localStorage.getItem("businessId") || "default";
+
 const db = firebase.firestore();
 
 async function fetchData(collection, dateRange) {
