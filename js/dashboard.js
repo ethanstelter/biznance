@@ -83,21 +83,17 @@ console.log("🎯 Checking canvas element:", id, canvas);
       renderChart("profitChart", "Profit ($)", profitData, "#1E1E1E");
     }
 
-  window.addEventListener("DOMContentLoaded", () => {
-  auth.onAuthStateChanged(user => {
+ window.addEventListener("DOMContentLoaded", () => {
+  firebase.auth().onAuthStateChanged(user => {
     if (!user) {
       window.location.href = "/login.html";
     } else {
-      // Put all your existing logic here:
-      // fetchData(), renderChart(), loadAllCharts(), etc.
-
-      // AND call loadAllCharts() here
-      loadAllCharts();
+      // slight delay to ensure everything is loaded (helps in edge cases)
+      setTimeout(() => {
+        loadAllCharts(); // call your existing chart loader
+      }, 100); // 100ms delay is enough to stabilize everything
     }
   });
 });
 
-
-  }
-});
 
