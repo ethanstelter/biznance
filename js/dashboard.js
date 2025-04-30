@@ -1,11 +1,17 @@
 const db = firebase.firestore();
 
-async function fetchData(collection) {
-  const snapshot = await db.collection(collection)
-    .where("uid", "==", firebase.auth().currentUser.uid)
-    .orderBy("timestamp")
-    .get();
+async function fetchData(collection, dateRange) {
+  let query = db.collection(collection)
+    .where("uid", "==", firebase.auth().currentUser.uid);
 
+  if (dateRange) {
+    query = query.where("timestamp", ">=", dateRange.start)
+                 .where("timestamp", "<=", dateRange.end);
+  }
+
+  query = query.orderBy("timestamp");
+
+  const snapshot = await query.get();
   const dataByDate = {};
 
   snapshot.forEach(doc => {
@@ -20,6 +26,7 @@ async function fetchData(collection) {
   console.log("📊 Data for chart:", collection, dataByDate);
   return dataByDate;
 }
+
 
 function renderChart(id, label, data, color) {
   const canvas = document.getElementById(id);
@@ -55,10 +62,40 @@ function renderChart(id, label, data, color) {
     }
   });
 }
+function getDateRange(filter) {
+  const today = new Date();
+  const start = new Date();
+
+  if (filter === "week") {
+    start.setDate(today.getDate() - 7);
+  } else if (filter === "month") {
+    start.setMonth(today.getMonth() - 1);
+  } else if (filter === "year") {
+    start.setFullYear(today.getFullYear() - 1);
+  } else if (filter === "custom") {
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+    if (!startDate || !endDate) return null;
+    return {
+      start: new Date(startDate + "T00:00:00"),
+      end: new Date(endDate + "T23:59:59")
+    };
+  } else {
+    return null; // all time
+  }
+
+  return {
+    start: new Date(start.setHours(0, 0, 0, 0)),
+    end: new Date(today.setHours(23, 59, 59, 999))
+  };
+}
 
 async function loadAllCharts() {
-  const revenueData = await fetchData("revenue");
-  const expenseData = await fetchData("expenses");
+  const selectedFilter = document.getElementById("timeFilter").value;
+  const dateRange = getDateRange(selectedFilter);
+
+  const revenueData = await fetchData("revenue", dateRange);
+  const expenseData = await fetchData("expenses", dateRange);
 
   const allDates = new Set([
     ...Object.keys(revenueData),
@@ -82,9 +119,26 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!user) {
       window.location.href = "/login.html";
     } else {
-      setTimeout(() => {
-        loadAllCharts();
-      }, 100);
+setTimeout(() => {
+  loadAllCharts();
+
+  // ✅ Filtering event listeners
+  const timeFilter = document.getElementById("timeFilter");
+  const startDate = document.getElementById("startDate");
+  const endDate = document.getElementById("endDate");
+  const customInputs = document.getElementById("customDateInputs");
+
+  timeFilter.addEventListener("change", () => {
+    const value = timeFilter.value;
+    customInputs.classList.toggle("hidden", value !== "custom");
+
+    if (value !== "custom") {
+      loadAllCharts();
     }
+  });
+
+  startDate.addEventListener("change", loadAllCharts);
+  endDate.addEventListener("change", loadAllCharts);
+}, 100);
   });
 });
