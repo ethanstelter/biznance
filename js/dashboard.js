@@ -94,6 +94,12 @@ async function loadAllCharts() {
   const selectedFilter = document.getElementById("timeFilter").value;
   const dateRange = getDateRange(selectedFilter);
 
+  // 🔒 Prevent chart from running if custom range is missing
+  if (selectedFilter === "custom" && !dateRange) {
+    console.log("⛔ Waiting for full custom date range...");
+    return;
+  }
+
   const revenueData = await fetchData("revenue", dateRange);
   const expenseData = await fetchData("expenses", dateRange);
 
@@ -128,14 +134,20 @@ setTimeout(() => {
   const endDate = document.getElementById("endDate");
   const customInputs = document.getElementById("customDateInputs");
 
-  timeFilter.addEventListener("change", () => {
-    const value = timeFilter.value;
-    customInputs.classList.toggle("hidden", value !== "custom");
+ timeFilter.addEventListener("change", () => {
+  const value = timeFilter.value;
+  customInputs.classList.toggle("hidden", value !== "custom");
 
-    if (value !== "custom") {
-      loadAllCharts();
-    }
-  });
+  // ✅ Add this to clear previously shown charts when selecting custom
+  if (value === "custom") {
+    // Clear charts and wait for user to fill in dates
+    console.log("🕓 Waiting for custom date input...");
+    return;
+  }
+
+  loadAllCharts();
+});
+
 
   startDate.addEventListener("change", loadAllCharts);
   endDate.addEventListener("change", loadAllCharts);
