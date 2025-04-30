@@ -73,22 +73,37 @@ loadRevenueEntries();
 
       const source = form.source.value;
       const amount = parseFloat(form.amount.value);
+      const isRecurring = document.getElementById("recurring-revenue").checked;
 
-      try {
-        await db.collection("revenue").add({
-          uid: user.uid,
-          source: source,
-          amount: amount,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
+   try {
+  // First: Add the revenue entry
+  await db.collection("revenue").add({
+    uid: user.uid,
+    source: source,
+    amount: amount,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
 
-        status.textContent = "✅ Revenue saved!";
-        status.style.color = "green";
-        form.reset();
-      } catch (err) {
-        status.textContent = "❌ " + err.message;
-        status.style.color = "red";
-      }
+  // Then: If recurring, also save it to the "recurring" collection
+  if (isRecurring) {
+    await db.collection("recurring").add({
+      uid: user.uid,
+      type: "revenue",
+      source: source,
+      amount: amount,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  status.textContent = "✅ Revenue saved!";
+  status.style.color = "green";
+  form.reset();
+  loadRevenueEntries(); // refresh the list
+
+} catch (err) {
+  status.textContent = "❌ " + err.message;
+  status.style.color = "red";
+}
     });
   }
 });
