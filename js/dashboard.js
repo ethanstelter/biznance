@@ -20,11 +20,13 @@ auth.onAuthStateChanged(user => {
         const dateStr = ts.toISOString().split("T")[0];
         dataByDate[dateStr] = (dataByDate[dateStr] || 0) + data.amount;
       });
+console.log("📊 Data for chart:", collection, dataByDate);
 
       return dataByDate;
     }
 
     function renderChart(id, label, data, color) {
+      console.log("🎯 Rendering chart:", id, label, data);
       const ctx = document.getElementById(id).getContext("2d");
       new Chart(ctx, {
         type: 'line',
