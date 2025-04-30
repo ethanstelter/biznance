@@ -30,6 +30,36 @@
 
   <!-- Header will auto-load here -->
   <div id="header"></div>
+<!-- Firebase SDK -->
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"></script>
+
+<!-- Firebase Config & Initialization -->
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCo5DMir__Aahm2jFjHrE5FMVMiw0SHJKg",
+    authDomain: "biznance-22126.firebaseapp.com",
+    projectId: "biznance-22126",
+    storageBucket: "biznance-22126.firebasestorage.app",
+    messagingSenderId: "860851803576",
+    appId: "1:860851803576:web:5d4fb6b032346bba1cab4d",
+    measurementId: "G-045HJ2KPJP"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+</script>
+
+<!-- Auth protection -->
+<script>
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "/login.html";
+    }
+  });
+</script>
 
   <!-- Main page content will go here later -->
   <main class="flex-1">
