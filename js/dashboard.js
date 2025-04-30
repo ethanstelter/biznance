@@ -25,32 +25,40 @@ console.log("📊 Data for chart:", collection, dataByDate);
       return dataByDate;
     }
 
-    function renderChart(id, label, data, color) {
-      console.log("🎯 Rendering chart:", id, label, data);
-      const ctx = document.getElementById(id).getContext("2d");
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: Object.keys(data),
-          datasets: [{
-            label: label,
-            data: Object.values(data),
-            borderColor: color,
-            backgroundColor: color + "20", // 20 = light transparent background
-            fill: true,
-            tension: 0.3
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
+function renderChart(id, label, data, color) {
+  const canvas = document.getElementById(id);
+  if (!canvas) {
+    console.log(`❌ Canvas element with id "${id}" not found.`);
+    return;
+  }
+
+  const ctx = canvas.getContext("2d");
+  console.log("🖌️ Canvas context for", id, ":", ctx);
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: Object.keys(data),
+      datasets: [{
+        label: label,
+        data: Object.values(data),
+        borderColor: color,
+        backgroundColor: color + "20", // light background
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
         }
-      });
+      }
     }
+  });
+}
+
 
     async function loadAllCharts() {
       const revenueData = await fetchData("revenue");
@@ -75,7 +83,10 @@ console.log("📊 Data for chart:", collection, dataByDate);
       renderChart("profitChart", "Profit ($)", profitData, "#1E1E1E");
     }
 
-    loadAllCharts();
+   window.onload = () => {
+  loadAllCharts();
+};
+
   }
 });
 
