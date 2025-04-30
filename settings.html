@@ -70,6 +70,22 @@
     </button>
   </div>
 </main>
+  
+<script>
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "/login.html";
+    } else {
+      document.getElementById('user-email').textContent = user.email;
+
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        auth.signOut().then(() => {
+          window.location.href = "/login.html";
+        });
+      });
+    }
+  });
+</script>
 
 
   <!-- Footer will auto-load here -->
