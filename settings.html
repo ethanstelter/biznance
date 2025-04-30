@@ -106,6 +106,48 @@
       });
     }
   });
+  const updateForm = document.getElementById("update-form");
+const statusEl = document.getElementById("update-status");
+
+updateForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const newEmail = document.getElementById("new-email").value.trim();
+  const newPassword = document.getElementById("new-password").value;
+  const currentPassword = document.getElementById("current-password").value;
+
+  statusEl.textContent = "Updating...";
+  statusEl.style.color = "black";
+
+  const user = auth.currentUser;
+  const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+
+  try {
+    // Re-authenticate the user first
+    await user.reauthenticateWithCredential(credential);
+
+    // Update email if provided
+    if (newEmail !== "") {
+      await user.updateEmail(newEmail);
+      console.log("✅ Email updated");
+    }
+
+    // Update password if provided
+    if (newPassword !== "") {
+      await user.updatePassword(newPassword);
+      console.log("✅ Password updated");
+    }
+
+    statusEl.textContent = "✅ Account updated!";
+    statusEl.style.color = "green";
+    updateForm.reset();
+  } catch (err) {
+    console.error("❌ Update error:", err.message);
+    statusEl.textContent = "❌ " + err.message;
+    statusEl.style.color = "red";
+  }
+});
+
 </script>
 
 
