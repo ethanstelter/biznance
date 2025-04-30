@@ -1,4 +1,4 @@
-const currentBusinessId = localStorage.getItem("businessId") || "default";
+
 
 const db = firebase.firestore();
 
