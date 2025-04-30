@@ -125,31 +125,31 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!user) {
       window.location.href = "/login.html";
     } else {
-setTimeout(() => {
-  loadAllCharts();
+      setTimeout(() => {
+        loadAllCharts();
 
-  // ✅ Filtering event listeners
-  const timeFilter = document.getElementById("timeFilter");
-  const startDate = document.getElementById("startDate");
-  const endDate = document.getElementById("endDate");
-  const customInputs = document.getElementById("customDateInputs");
+        // ✅ Filtering event listeners
+        const timeFilter = document.getElementById("timeFilter");
+        const startDate = document.getElementById("startDate");
+        const endDate = document.getElementById("endDate");
+        const customInputs = document.getElementById("customDateInputs");
 
-timeFilter.addEventListener("change", () => {
-  const value = timeFilter.value;
-  customInputs.classList.toggle("hidden", value !== "custom");
+        timeFilter.addEventListener("change", () => {
+          const value = timeFilter.value;
+          customInputs.classList.toggle("hidden", value !== "custom");
 
-  if (value === "custom") {
-    console.log("🕓 Waiting for custom date input...");
-    return;
-  }
+          if (value === "custom") {
+            console.log("🕓 Waiting for custom date input...");
+            return;
+          }
 
-  loadAllCharts();
-}); // ✅ this closes the addEventListener correctly
+          loadAllCharts();
+        });
 
-
-
-  startDate.addEventListener("change", loadAllCharts);
-  endDate.addEventListener("change", loadAllCharts);
-}, 100);
+        startDate.addEventListener("change", loadAllCharts);
+        endDate.addEventListener("change", loadAllCharts);
+      }, 100); // ← closes setTimeout
+    }
   });
-});
+}); // ← closes DOMContentLoaded
+
