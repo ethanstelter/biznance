@@ -62,6 +62,24 @@
 
 <main class="flex-1 px-6 py-10">
   <h2 class="text-2xl font-bold text-green dark:text-green mb-6 text-center">Your Financial Dashboard</h2>
+<div class="max-w-md mx-auto mb-10 text-center">
+  <label for="timeFilter" class="block mb-2 text-black dark:text-white font-semibold">View Data:</label>
+  <select id="timeFilter" class="w-full p-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white">
+    <option value="all">All Time</option>
+    <option value="week">This Week</option>
+    <option value="month">This Month</option>
+    <option value="year">This Year</option>
+    <option value="custom">Custom Range</option>
+  </select>
+
+  <div id="customDateInputs" class="mt-4 hidden">
+    <label class="block text-sm mb-1 text-black dark:text-white">Start Date</label>
+    <input type="date" id="startDate" class="w-full mb-2 p-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white">
+    
+    <label class="block text-sm mb-1 text-black dark:text-white">End Date</label>
+    <input type="date" id="endDate" class="w-full p-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white">
+  </div>
+</div>
 
   <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-10">
     <div class="bg-white dark:bg-neutral-900 rounded-lg p-4 shadow text-center">
