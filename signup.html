@@ -68,14 +68,16 @@
 </script>
 
 <!-- Login form logic -->
+<!-- Login form logic -->
+<!-- Signup form logic -->
 <script>
-  const loginForm = document.getElementById('login-form');
-  const errorEl = document.getElementById('login-error');
+  const signupForm = document.getElementById('signup-form');
+  const errorEl = document.getElementById('signup-error');
 
-  loginForm.addEventListener('submit', async (e) => {
+  signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = loginForm.email.value;
-    const password = loginForm.password.value;
+    const email = signupForm.email.value;
+    const password = signupForm.password.value;
 
     try {
       await auth.createUserWithEmailAndPassword(email, password);
@@ -85,7 +87,6 @@
     }
   });
 </script>
-
 
 </body>
 </html>
