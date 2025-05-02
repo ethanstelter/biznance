@@ -62,7 +62,7 @@ firebase.auth().onAuthStateChanged(user => {
     }
 
     try {
-      await db.collection("expense").add(entryData);
+      await db.collection("expenses").add(entryData);
 
       if (isRecurring) {
         await db.collection("recurring").add({
@@ -158,7 +158,7 @@ firebase.auth().onAuthStateChanged(user => {
   button.addEventListener("click", async () => {
     const id = button.getAttribute("data-id");
     try {
-      await db.collection("expense").doc(id).delete();
+      await db.collection("expenses").doc(id).delete();
       loadexpenseEntries(); // Refresh table
     } catch (err) {
       alert("Failed to delete: " + err.message);
@@ -217,7 +217,7 @@ document.querySelectorAll(".sort-option").forEach(btn => {
     }
 
     // Firestore fetch
-    db.collection("expense")
+    db.collection("expenses")
       .where("uid", "==", user.uid)
       .orderBy("timestamp", "desc")
       .get()
