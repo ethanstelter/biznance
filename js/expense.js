@@ -27,9 +27,11 @@ firebase.auth().onAuthStateChanged(user => {
   recurringToggle.addEventListener("change", () => {
     recurringSection.classList.toggle("hidden", !recurringToggle.checked);
   });
-  categorySelect.addEventListener("change", () => {
-    customCategory.classList.toggle("hidden", categorySelect.value !== "Other");
-  });
+categorySelect.addEventListener("change", () => {
+  const isOther = categorySelect.value === "Other";
+  customCategory.classList.toggle("hidden", !isOther);
+  customCategory.required = isOther;
+});
   paymentSelect.addEventListener("change", () => {
     customPayment.classList.toggle("hidden", paymentSelect.value !== "Other");
   });
@@ -46,11 +48,6 @@ firebase.auth().onAuthStateChanged(user => {
     const date = document.getElementById("date").value;
     const isRecurring = recurringToggle.checked;
 
-    if (!category) {
-  status.textContent = "❌ Please select or enter a category.";
-  status.style.color = "red";
-  return;
-}
 
     const entryData = {
       uid: user.uid,
