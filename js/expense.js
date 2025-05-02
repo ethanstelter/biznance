@@ -1,7 +1,3 @@
-
-
-// expense.js
-
 firebase.auth().onAuthStateChanged(user => {
   if (!user) {
     window.location.href = "/login.html";
@@ -10,42 +6,93 @@ firebase.auth().onAuthStateChanged(user => {
     const form = document.getElementById("expense-form");
     const status = document.getElementById("expense-status");
 
-    // Handle form submission
+    const categorySelect = document.getElementById("category");
+    const customCategory = document.getElementById("customCategory");
+
+    const paymentSelect = document.getElementById("paymentMethod");
+    const customPayment = document.getElementById("customPayment");
+
+    const recurringToggle = document.getElementById("recurring-expense");
+    const recurringSection = document.getElementById("recurring-section");
+
+    // Toggle recurring section
+    recurringToggle.addEventListener("change", () => {
+      recurringSection.classList.toggle("hidden", !recurringToggle.checked);
+    });
+
+    // Show custom category input
+    categorySelect.addEventListener("change", () => {
+      customCategory.classList.toggle("hidden", categorySelect.value !== "Other");
+    });
+
+    // Show custom payment input
+    paymentSelect.addEventListener("change", () => {
+      customPayment.classList.toggle("hidden", paymentSelect.value !== "Other");
+    });
+
+    // Form submit
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const category = form.category.value;
+      const source = form.source.value;
       const amount = parseFloat(form.amount.value);
-      const isRecurring = document.getElementById("recurring-expense").checked;
+      const category = categorySelect.value === "Other" ? customCategory.value.trim() : categorySelect.value;
+      const paymentMethod = paymentSelect.value === "Other" ? customPayment.value.trim() : paymentSelect.value;
+      const notes = document.getElementById("notes").value.trim();
+      const date = document.getElementById("date").value;
+      const isRecurring = recurringToggle.checked;
+
+      const entryData = {
+        uid: user.uid,
+        source,
+        amount,
+        category,
+        paymentMethod,
+        notes,
+        date: new Date(date),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      };
 
       try {
-        await db.collection("expenses").add({
-          uid: user.uid,
-          category: category,
-          amount: amount,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-if (isRecurring) {
-  await db.collection("recurring").add({
-    uid: user.uid,
-    type: "expense",
-    category: category,
-    amount: amount,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  });
-}
+        await db.collection("expenses").add(entryData);
+
+        // Save recurring if checked
+        if (isRecurring) {
+          const frequency = document.getElementById("frequency").value;
+          const endDate = document.getElementById("endDate").value;
+          const recurringLabel = document.getElementById("recurringLabel").value.trim();
+
+          await db.collection("recurring").add({
+            uid: user.uid,
+            type: "expense",
+            source,
+            amount,
+            category,
+            paymentMethod,
+            notes,
+            frequency,
+            endDate: new Date(endDate),
+            label: recurringLabel,
+            startDate: new Date(date),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
 
         status.textContent = "✅ Expense saved!";
         status.style.color = "green";
         form.reset();
-        loadExpenses(); // refresh list
+        recurringSection.classList.add("hidden");
+        customCategory.classList.add("hidden");
+        customPayment.classList.add("hidden");
+
+        loadExpenses();
       } catch (err) {
         status.textContent = "❌ " + err.message;
         status.style.color = "red";
       }
     });
 
-    // Load and display entries
+    // Load entries
     async function loadExpenses() {
       const list = document.getElementById("expense-list");
       list.innerHTML = "<p class='text-gray-500 text-center'>Loading...</p>";
@@ -72,7 +119,7 @@ if (isRecurring) {
 
           item.innerHTML = `
             <div>
-              <p class="font-semibold text-black dark:text-white">${entry.category}</p>
+              <p class="font-semibold text-black dark:text-white">${entry.source}</p>
               <p class="text-sm text-gray-500 dark:text-gray-400">$${entry.amount.toFixed(2)}</p>
             </div>
             <button data-id="${id}" class="text-red-500 hover:text-red-700 font-semibold delete-btn">Delete</button>
@@ -86,19 +133,23 @@ if (isRecurring) {
             const id = button.getAttribute("data-id");
             try {
               await db.collection("expenses").doc(id).delete();
-              loadExpenses(); // refresh
+              loadExpenses();
             } catch (err) {
               alert("Error deleting: " + err.message);
             }
           });
         });
-
       } catch (err) {
         list.innerHTML = `<p class='text-red-500'>Error loading expenses: ${err.message}</p>`;
       }
     }
 
-    loadExpenses(); // initial load
+    // Initial load
+    loadExpenses();
+
+    // Set default date fields to today
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("date").value = today;
+    document.getElementById("endDate").value = today;
   }
 });
-
