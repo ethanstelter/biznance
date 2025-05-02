@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Biznance – Expenses</title>
 
-  <!-- TailwindCSS -->
+  <!-- TailwindCSS + Theme -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -31,7 +31,7 @@
   <!-- Header -->
   <div id="header"></div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -116,18 +116,101 @@
             <input type="date" id="endDate" class="input w-full" />
             <input type="text" id="recurringLabel" placeholder="Recurring label (optional)" class="input w-full" />
           </div>
-            <button type="submit" class="w-full bg-blue text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
+
+          <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
             Save Expense
           </button>
         </form>
         <p id="expense-status" class="text-sm mt-2 text-center"></p>
       </section>
+      <!-- Expense Table & Filters -->
+<section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6 w-full">
+  <div class="flex justify-between items-center">
+    <h2 class="text-2xl font-bold text-blue text-center w-full">Expense Spreadsheet</h2>
+  </div>
 
-     <!-- Expense Table (Spreadsheet) -->
-<section id="expense-table-section">
-  <!-- This section is dynamically populated by expense.js -->
+  <!-- Filters Toggle -->
+  <div class="flex justify-start">
+    <button id="toggle-filters" class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-neutral-800 hover:bg-gray-300 dark:hover:bg-neutral-700 transition">
+      Show Filters
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div id="expense-filters" class="flex flex-wrap gap-4 mb-4 hidden">
+    <select id="filter-category" class="input w-40 text-gray-500">
+      <option value="">All Categories</option>
+    </select>
+    <select id="filter-payment" class="input w-40 text-gray-500">
+      <option value="">All Payment Methods</option>
+    </select>
+    <div class="flex flex-col">
+      <label for="filter-start-date" class="text-xs font-medium mb-1">Start Date</label>
+      <input type="date" id="filter-start-date" class="input w-40" />
+    </div>
+    <div class="flex flex-col">
+      <label for="filter-end-date" class="text-xs font-medium mb-1">End Date</label>
+      <input type="date" id="filter-end-date" class="input w-40" />
+    </div>
+    <input type="text" id="filter-search" class="input w-56" placeholder="Search by source or notes" />
+    <label class="flex items-center space-x-2 text-sm text-black dark:text-white">
+      <input type="checkbox" id="filter-recurring" class="form-checkbox" />
+      <span>Recurring Only</span>
+    </label>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left border dark:border-gray-700">
+      <thead class="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-white">
+        <tr>
+          <th class="px-4 py-2 relative group">
+            Date <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="asc">Oldest → Newest</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="desc">Newest → Oldest</button>
+            </div>
+          </th>
+          <th class="px-4 py-2 relative group">
+            Source <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="asc">A → Z</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="desc">Z → A</button>
+            </div>
+          </th>
+          <th class="px-4 py-2 relative group">
+            Amount <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="asc">Low → High</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="desc">High → Low</button>
+            </div>
+          </th>
+          <th class="px-4 py-2 relative group">
+            Category <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="asc">A → Z</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="desc">Z → A</button>
+            </div>
+          </th>
+          <th class="px-4 py-2">Payment</th>
+          <th class="px-4 py-2">Notes</th>
+          <th class="px-4 py-2">Recurring</th>
+          <th class="px-4 py-2 text-right">Delete</th>
+        </tr>
+      </thead>
+      <tbody id="expense-table-body" class="bg-white dark:bg-black text-black dark:text-white">
+        <!-- JS will populate rows -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Show More Button -->
+  <div class="mt-6">
+    <button id="toggle-expense-table" class="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
+      Show All
+    </button>
+  </div>
 </section>
-
 
     </div>
   </main>
@@ -144,3 +227,4 @@
   </style>
 </body>
 </html>
+
