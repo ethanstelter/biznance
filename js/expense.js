@@ -87,7 +87,7 @@ firebase.auth().onAuthStateChanged(user => {
       recurringSection.classList.add("hidden");
       customCategory.classList.add("hidden");
       customPayment.classList.add("hidden");
-      loadexpenseEntries();
+      loadExpenseEntries();
     } catch (err) {
       status.textContent = "❌ " + err.message;
       status.style.color = "red";
@@ -158,7 +158,7 @@ firebase.auth().onAuthStateChanged(user => {
     const id = button.getAttribute("data-id");
     try {
       await db.collection("expenses").doc(id).delete();
-      loadexpenseEntries(); // Refresh table
+      loadExpenseEntries(); // Refresh table
     } catch (err) {
       alert("Failed to delete: " + err.message);
     }
