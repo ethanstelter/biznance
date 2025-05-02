@@ -145,5 +145,8 @@ firebase.auth().onAuthStateChanged(user => {
     });
 
     loadRevenueEntries();
+    const today = new Date().toISOString().split("T")[0];
+document.getElementById("date").value = today;
+document.getElementById("endDate").value = today;
   }
 });
