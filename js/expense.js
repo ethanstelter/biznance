@@ -152,6 +152,8 @@ let allEntries = [];
         return 0;
       });
 
+      console.log("Filtered rows:", filtered);
+
       renderTable(filtered);
     
       document.querySelectorAll(".delete-btn").forEach(button => {
