@@ -274,7 +274,7 @@
     </div>
 
   <!-- Pie Chart -->
-<div class="mt-6 p-4 bg-white shadow rounded-lg max-w-4xl mx-auto">
+<div class="mt-6 p-4 bg-white shadow rounded-lg max-w-6xl mx-auto">
   <div class="flex justify-between items-center mb-4">
     <h2 class="text-lg font-semibold text-gray-700">Revenue by Category</h2>
     <button id="toggleCategoryView" class="text-sm text-blue-500 hover:underline hidden">Show All</button>
@@ -510,27 +510,42 @@
       }
     });
 
-    // Custom Legend + Stats
-    const legendContainer = document.getElementById("revenueCategoryLegend");
-    legendContainer.innerHTML = "";
+  // Custom Legend + Stats
+const legendContainer = document.getElementById("revenueCategoryLegend");
+legendContainer.innerHTML = "";
 
-    const total = values.reduce((sum, val) => sum + val, 0);
-    legendContainer.innerHTML += `
-      <div class="font-medium text-gray-800">Total Revenue: <span class="text-green-600 font-semibold">$${total.toFixed(2)}</span></div>
-      <div class="text-gray-500">Categories Used: ${labels.length}</div>
-      <hr class="my-2">
-    `;
+const total = values.reduce((sum, val) => sum + val, 0);
+const average = total / labels.length;
+const highest = displayData[0];
+const lowest = displayData[displayData.length - 1];
 
-    displayData.forEach(([label, value]) => {
-      const color = getColorForCategory(label);
-      legendContainer.innerHTML += `
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full" style="background-color: ${color};"></span>
-          <span class="flex-1 text-gray-700">${label}</span>
-          <span class="text-gray-600 font-medium">$${value.toFixed(2)}</span>
-        </div>
-      `;
-    });
+legendContainer.innerHTML += `
+  <div class="font-medium text-gray-800">Total Revenue: <span class="text-green-600 font-semibold">$${total.toFixed(2)}</span></div>
+  <div class="text-gray-500">Categories Used: ${labels.length}</div>
+  <hr class="my-2">
+`;
+
+displayData.forEach(([label, value]) => {
+  const color = getColorForCategory(label);
+  const percent = ((value / total) * 100).toFixed(1);
+  legendContainer.innerHTML += `
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full" style="background-color: ${color};"></span>
+      <span class="flex-1 text-gray-700">${label}</span>
+      <span class="text-gray-600 font-medium">$${value.toFixed(2)} <span class="text-xs text-gray-400">(${percent}%)</span></span>
+    </div>
+  `;
+});
+
+legendContainer.innerHTML += `
+  <hr class="my-3">
+  <div class="text-gray-500 text-xs">
+    <div><strong>Top Category:</strong> ${highest[0]} ($${highest[1].toFixed(2)})</div>
+    <div><strong>Lowest Category:</strong> ${lowest[0]} ($${lowest[1].toFixed(2)})</div>
+    <div><strong>Average per Category:</strong> $${average.toFixed(2)}</div>
+  </div>
+`;
+
 
     const toggleButton = document.getElementById("toggleCategoryView");
     toggleButton.classList.toggle("hidden", !showToggle);
