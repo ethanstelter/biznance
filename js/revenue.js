@@ -192,11 +192,15 @@ document.querySelectorAll(".sort-option").forEach(btn => {
       ${entry.notes.length > 30 ? `<div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-xs mt-1">${entry.notes}</div>` : ""}
     </td>
     <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
-    <td class="px-4 py-2 text-right">
-      <button class="delete-btn text-red-600 hover:text-red-800 hidden group-hover:inline" data-id="${entry.id}" title="Delete">
-        🗑️
-      </button>
-    </td>
+  <td class="px-4 py-2 text-right">
+  <button
+    class="delete-btn text-gray-400 hover:text-red-600 transition"
+    data-id="${entry.id}"
+    title="Delete"
+  >
+    ✖
+  </button>
+</td>
   </tr>
 `).join("");
 
