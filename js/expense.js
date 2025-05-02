@@ -46,6 +46,12 @@ firebase.auth().onAuthStateChanged(user => {
     const date = document.getElementById("date").value;
     const isRecurring = recurringToggle.checked;
 
+    if (!category) {
+  status.textContent = "❌ Please select or enter a category.";
+  status.style.color = "red";
+  return;
+}
+
     const entryData = {
       uid: user.uid,
       source,
