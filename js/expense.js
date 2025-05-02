@@ -322,11 +322,3 @@ function updateSummary(entries) {
 
   loadExpenseEntries();
 });
-
-document.addEventListener('DOMContentLoaded', function () {
-  const filterButton = document.getElementById('expenseFilterButton'); // 👈 the filter "Apply" button
-  if (filterButton) {
-    filterButton.click();
-  }
-});
-
