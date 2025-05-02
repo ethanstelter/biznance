@@ -1,4 +1,7 @@
 firebase.auth().onAuthStateChanged(user => {
+  if (isRecurring) {
+  entryData.frequency = document.getElementById("frequency").value;
+}
   if (!user) {
     window.location.href = "/login.html";
   } else {
@@ -95,8 +98,12 @@ function loadRevenueEntries() {
         <td class="px-4 py-2">$${entry.amount.toFixed(2)}</td>
         <td class="px-4 py-2">${entry.category}</td>
         <td class="px-4 py-2">${entry.paymentMethod}</td>
-        <td class="px-4 py-2">${entry.notes || ""}</td>
-        <td class="px-4 py-2 text-center">${entry.isRecurring ? "✅" : "—"}</td>
+        <td class="px-4 py-2 max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis relative group">
+  <span class="block">${entry.notes}</span>
+  ${entry.notes.length > 30 ? `<div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-xs mt-1">${entry.notes}</div>` : ""}
+</td>
+        <td class="px-4 py-2 text-center">${entry.frequency ? entry.frequency : "—"}</td>
+
       </tr>
     `).join("");
 
