@@ -96,7 +96,7 @@ firebase.auth().onAuthStateChanged(user => {
   });
 let allEntries = [];
   // Load and render spreadsheet
-  function loadexpenseEntries() {
+  function loadExpenseEntries() {
     const tableBody = document.getElementById("expense-table-body");
     const showAllBtn = document.getElementById("toggle-expense-table");
     const filterToggleBtn = document.getElementById("toggle-filters");
