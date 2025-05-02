@@ -147,8 +147,14 @@
     <select id="filter-payment" class="input w-40 text-gray-500">
       <option value="">All Payment Methods</option>
     </select>
-    <input type="date" id="filter-start-date" class="input w-40" />
-    <input type="date" id="filter-end-date" class="input w-40" />
+   <div class="flex flex-col">
+  <label for="filter-start-date" class="text-xs font-medium mb-1">Start Date</label>
+  <input type="date" id="filter-start-date" class="input w-40" />
+</div>
+<div class="flex flex-col">
+  <label for="filter-end-date" class="text-xs font-medium mb-1">End Date</label>
+  <input type="date" id="filter-end-date" class="input w-40" />
+</div>
     <input type="text" id="filter-search" class="input w-56" placeholder="Search by source or notes" />
     <label class="flex items-center space-x-2 text-sm text-black dark:text-white">
   <input type="checkbox" id="filter-recurring" class="form-checkbox" />
