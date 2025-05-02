@@ -153,6 +153,15 @@ firebase.auth().onAuthStateChanged(user => {
       });
 
       renderTable(filtered);
+      // Reattach dropdown sort listeners after table is rendered
+document.querySelectorAll(".sort-option").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const field = btn.dataset.sort;
+    const dir = btn.dataset.dir;
+    currentSort = { field, asc: dir === "asc" };
+    applyFiltersAndRender();
+  });
+});
     }
 
     function renderTable(data) {
