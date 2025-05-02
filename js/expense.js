@@ -216,30 +216,33 @@ document.querySelectorAll(".sort-option").forEach(btn => {
     }
 
     // Firestore fetch
-    db.collection("expenses")
-      .where("uid", "==", user.uid)
-      .orderBy("timestamp", "desc")
-      .get()
-      .then(snapshot => {
-     allEntries = snapshot.docs.map(doc => {
-  const d = doc.data();
-  return {
-    ...d,
-    id: doc.id, // 👈 Required for delete to work
-    date: d.date?.toDate?.() || new Date(0),
-    amount: parseFloat(d.amount),
-    notes: d.notes || "",
-    frequency: d.frequency || ""
-  };
-});
-
-        const cats = [...new Set(allEntries.map(e => e.category))];
-        const pays = [...new Set(allEntries.map(e => e.paymentMethod))];
-        filterCategory.innerHTML += cats.map(c => `<option value="${c}">${c}</option>`).join("");
-        filterPayment.innerHTML += pays.map(p => `<option value="${p}">${p}</option>`).join("");
-
-        applyFiltersAndRender();
+ function fetchExpensesAndRender() {
+  db.collection("expenses")
+    .where("uid", "==", user.uid)
+    .orderBy("timestamp", "desc")
+    .get()
+    .then(snapshot => {
+      allEntries = snapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+          ...d,
+          id: doc.id,
+          date: d.date?.toDate?.() || new Date(0),
+          amount: parseFloat(d.amount),
+          notes: d.notes || "",
+          frequency: d.frequency || ""
+        };
       });
+
+      const cats = [...new Set(allEntries.map(e => e.category))];
+      const pays = [...new Set(allEntries.map(e => e.paymentMethod))];
+      filterCategory.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join("");
+      filterPayment.innerHTML = '<option value="">All Payment Methods</option>' + pays.map(p => `<option value="${p}">${p}</option>`).join("");
+
+      applyFiltersAndRender();
+    });
+}
+
 
     // Bind filter + show all toggle
     [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el =>
@@ -253,5 +256,5 @@ document.querySelectorAll(".sort-option").forEach(btn => {
     });
   }
 
-  loadexpenseEntries();
+  ;
 });
