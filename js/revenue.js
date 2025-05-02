@@ -1,40 +1,41 @@
 firebase.auth().onAuthStateChanged(user => {
-  if (isRecurring) {
-  entryData.frequency = document.getElementById("frequency").value;
-}
   if (!user) {
     window.location.href = "/login.html";
-  } else {
-    const db = firebase.firestore();
-    const form = document.getElementById("revenue-form");
-    const status = document.getElementById("revenue-status");
+    return;
+  }
 
-    const categorySelect = document.getElementById("category");
-    const customCategory = document.getElementById("customCategory");
+  const db = firebase.firestore();
+  const form = document.getElementById("revenue-form");
+  const status = document.getElementById("revenue-status");
 
-    const paymentSelect = document.getElementById("paymentMethod");
-    const customPayment = document.getElementById("customPayment");
+  const categorySelect = document.getElementById("category");
+  const customCategory = document.getElementById("customCategory");
 
-    const recurringToggle = document.getElementById("recurring-revenue");
-    const recurringSection = document.getElementById("recurring-section");
+  const paymentSelect = document.getElementById("paymentMethod");
+  const customPayment = document.getElementById("customPayment");
 
-    // Show/hide recurring section
-    recurringToggle.addEventListener("change", () => {
-      recurringSection.classList.toggle("hidden", !recurringToggle.checked);
-    });
+  const recurringToggle = document.getElementById("recurring-revenue");
+  const recurringSection = document.getElementById("recurring-section");
 
-    // Show/hide custom category input
-    categorySelect.addEventListener("change", () => {
-      customCategory.classList.toggle("hidden", categorySelect.value !== "Other");
-    });
+  // Autofill dates
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("date").value = today;
+  document.getElementById("endDate").value = today;
 
-    // Show/hide custom payment method input
-    paymentSelect.addEventListener("change", () => {
-      customPayment.classList.toggle("hidden", paymentSelect.value !== "Other");
-    });
+  // Show/hide recurring section
+  recurringToggle.addEventListener("change", () => {
+    recurringSection.classList.toggle("hidden", !recurringToggle.checked);
+  });
 
-    // Load entries
-function loadRevenueEntries() {
+  categorySelect.addEventListener("change", () => {
+    customCategory.classList.toggle("hidden", categorySelect.value !== "Other");
+  });
+
+  paymentSelect.addEventListener("change", () => {
+    customPayment.classList.toggle("hidden", paymentSelect.value !== "Other");
+  });
+
+  function loadRevenueEntries() {
   const tableBody = document.getElementById("revenue-table-body");
   const showAllBtn = document.getElementById("toggle-revenue-table");
   const filterToggleBtn = document.getElementById("toggle-filters");
@@ -50,7 +51,7 @@ function loadRevenueEntries() {
   const filterEnd = document.getElementById("filter-end-date");
   const filterSearch = document.getElementById("filter-search");
 
-  // Toggle filters
+  // Toggle filters UI
   filterToggleBtn.addEventListener("click", () => {
     filtersWrapper.classList.toggle("hidden");
     filterToggleBtn.textContent = filtersWrapper.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
@@ -59,7 +60,6 @@ function loadRevenueEntries() {
   function applyFiltersAndRender() {
     let filtered = [...allEntries];
 
-    // Apply filters
     if (filterCategory.value) filtered = filtered.filter(e => e.category === filterCategory.value);
     if (filterPayment.value) filtered = filtered.filter(e => e.paymentMethod === filterPayment.value);
 
@@ -76,7 +76,6 @@ function loadRevenueEntries() {
       );
     }
 
-    // Sort
     filtered.sort((a, b) => {
       const valA = a[currentSort.field];
       const valB = b[currentSort.field];
@@ -86,6 +85,7 @@ function loadRevenueEntries() {
     });
 
     renderTable(filtered);
+    renderChart(filtered);
   }
 
   function renderTable(data) {
@@ -99,18 +99,67 @@ function loadRevenueEntries() {
         <td class="px-4 py-2">${entry.category}</td>
         <td class="px-4 py-2">${entry.paymentMethod}</td>
         <td class="px-4 py-2 max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis relative group">
-  <span class="block">${entry.notes}</span>
-  ${entry.notes.length > 30 ? `<div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-xs mt-1">${entry.notes}</div>` : ""}
-</td>
-        <td class="px-4 py-2 text-center">${entry.frequency ? entry.frequency : "—"}</td>
-
+          <span class="block">${entry.notes}</span>
+          ${entry.notes.length > 30 ? `<div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-xs mt-1">${entry.notes}</div>` : ""}
+        </td>
+        <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
       </tr>
     `).join("");
 
     showAllBtn.textContent = showingAll ? "Collapse" : "Show All";
   }
 
-  // Pull from Firestore
+  function renderChart(data) {
+    const ctx = document.getElementById("revenueChart").getContext("2d");
+    const totalsByDate = {};
+
+    data.forEach(entry => {
+      const key = new Date(entry.date).toISOString().split("T")[0];
+      if (!totalsByDate[key]) totalsByDate[key] = 0;
+      totalsByDate[key] += entry.amount;
+    });
+
+    const labels = Object.keys(totalsByDate).sort();
+    const values = labels.map(date => totalsByDate[date]);
+
+    if (window.revenueChartInstance) {
+      window.revenueChartInstance.destroy();
+    }
+
+    window.revenueChartInstance = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Revenue",
+          data: values,
+          borderColor: "#22DD86",
+          backgroundColor: "rgba(59,130,246,0.1)",
+          tension: 0.3,
+          pointRadius: 3,
+          pointBackgroundColor: "#3B82F6"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { ticks: { color: "#888" }, grid: { color: "#eee" }},
+          y: { beginAtZero: true, ticks: { color: "#888" }, grid: { color: "#eee" }}
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: "#444",
+              font: { weight: "bold" }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Firestore fetch
   db.collection("revenue")
     .where("uid", "==", user.uid)
     .orderBy("timestamp", "desc")
@@ -123,7 +172,7 @@ function loadRevenueEntries() {
           date: d.date?.toDate?.() || new Date(0),
           amount: parseFloat(d.amount),
           notes: d.notes || "",
-          isRecurring: !!d.isRecurring
+          frequency: d.frequency || ""
         };
       });
 
@@ -135,7 +184,7 @@ function loadRevenueEntries() {
       applyFiltersAndRender();
     });
 
-  // Listeners
+  // Event bindings
   [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el =>
     el.addEventListener("input", applyFiltersAndRender)
   );
@@ -155,72 +204,67 @@ function loadRevenueEntries() {
   });
 }
 
-    // Submit form
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+  // Form submit
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      const source = form.source.value;
-      const amount = parseFloat(form.amount.value);
-      const category = categorySelect.value === "Other" ? customCategory.value.trim() : categorySelect.value;
-      const paymentMethod = paymentSelect.value === "Other" ? customPayment.value.trim() : paymentSelect.value;
-      const notes = document.getElementById("notes").value.trim();
-      const date = document.getElementById("date").value;
-      const isRecurring = recurringToggle.checked;
+    const source = form.source.value;
+    const amount = parseFloat(form.amount.value);
+    const category = categorySelect.value === "Other" ? customCategory.value.trim() : categorySelect.value;
+    const paymentMethod = paymentSelect.value === "Other" ? customPayment.value.trim() : paymentSelect.value;
+    const notes = document.getElementById("notes").value.trim();
+    const date = document.getElementById("date").value;
+    const isRecurring = recurringToggle.checked;
 
-      const entryData = {
-        uid: user.uid,
-        source,
-        amount,
-        category,
-        paymentMethod,
-        notes,
-        date: new Date(date),
-        isRecurring,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      };
+    const entryData = {
+      uid: user.uid,
+      source,
+      amount,
+      category,
+      paymentMethod,
+      notes,
+      date: new Date(date),
+      isRecurring,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
 
-      try {
-        await db.collection("revenue").add(entryData);
+    if (isRecurring) {
+      entryData.frequency = document.getElementById("frequency").value;
+    }
 
-        // Handle recurring
-        if (isRecurring) {
-          const frequency = document.getElementById("frequency").value;
-          const endDate = document.getElementById("endDate").value;
-          const recurringLabel = document.getElementById("recurringLabel").value.trim();
+    try {
+      await db.collection("revenue").add(entryData);
 
-          await db.collection("recurring").add({
-            uid: user.uid,
-            type: "revenue",
-            source,
-            amount,
-            category,
-            paymentMethod,
-            notes,
-            frequency,
-            endDate: new Date(endDate),
-            label: recurringLabel,
-            startDate: new Date(date),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        }
-
-        status.textContent = "✅ Revenue saved!";
-        status.style.color = "green";
-        form.reset();
-        recurringSection.classList.add("hidden");
-        customCategory.classList.add("hidden");
-        customPayment.classList.add("hidden");
-
-        loadRevenueEntries();
-      } catch (err) {
-        status.textContent = "❌ " + err.message;
-        status.style.color = "red";
+      if (isRecurring) {
+        await db.collection("recurring").add({
+          uid: user.uid,
+          type: "revenue",
+          source,
+          amount,
+          category,
+          paymentMethod,
+          notes,
+          frequency: document.getElementById("frequency").value,
+          endDate: new Date(document.getElementById("endDate").value),
+          label: document.getElementById("recurringLabel").value.trim(),
+          startDate: new Date(date),
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
       }
-    });
 
-    loadRevenueEntries();
-    const today = new Date().toISOString().split("T")[0];
-document.getElementById("date").value = today;
-document.getElementById("endDate").value = today;
-  }
+      status.textContent = "✅ Revenue saved!";
+      status.style.color = "green";
+      form.reset();
+      recurringSection.classList.add("hidden");
+      customCategory.classList.add("hidden");
+      customPayment.classList.add("hidden");
+
+      loadRevenueEntries();
+    } catch (err) {
+      status.textContent = "❌ " + err.message;
+      status.style.color = "red";
+    }
+  });
+
+  loadRevenueEntries();
 });
