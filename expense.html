@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Biznance – Expenses</title>
 
-  <!-- TailwindCSS + Custom Config -->
+  <!-- TailwindCSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -28,10 +28,10 @@
 </head>
 <body class="bg-white dark:bg-black text-black dark:text-white font-sans min-h-screen flex flex-col">
 
-  <!-- Header will auto-load here -->
+  <!-- Header -->
   <div id="header"></div>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -47,61 +47,54 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore();
   </script>
-
-  <!-- Auth Guard -->
   <script>
     auth.onAuthStateChanged(user => {
       if (!user) window.location.href = "/login.html";
     });
   </script>
 
-  <!-- Main Content -->
-  <main class="flex-1 flex flex-col items-center px-6 py-10">
-    <div class="w-full max-w-2xl space-y-10">
+  <!-- Main Layout -->
+  <main class="flex-1 flex flex-col px-4 py-8">
+    <div class="w-full max-w-6xl mx-auto space-y-12">
 
       <!-- Expense Form -->
-      <section class="bg-white dark:bg-neutral-900 p-6 rounded shadow w-full">
-        <h2 class="text-2xl font-bold text-blue mb-4 text-center">Add Expense</h2>
+      <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6">
+        <h2 class="text-2xl font-bold text-blue text-center">Add Expense</h2>
         <form id="expense-form" class="space-y-4">
-
-          <!-- Source -->
-          <input type="text" id="source" placeholder="Expense Source" required class="input w-full" />
-
-          <!-- Amount -->
-          <input type="number" id="amount" placeholder="Amount (USD)" step="0.01" required class="input w-full" />
+          <input id="source" type="text" placeholder="Expense Name" required class="input w-full" />
+          <input id="amount" type="number" step="0.01" placeholder="Amount (USD)" required class="input w-full" />
 
           <!-- Category -->
           <div>
-            <select id="category" class="input w-full text-gray-500" required>
-              <option disabled selected value="">Category</option>
-              <option value="Office Supplies" class="text-black">Office Supplies</option>
-              <option value="Software" class="text-black">Software</option>
-              <option value="Marketing" class="text-black">Marketing</option>
-              <option value="Travel" class="text-black">Travel</option>
-              <option value="Utilities" class="text-black">Utilities</option>
-              <option value="Contractors" class="text-black">Contractors</option>
-              <option value="Other" class="text-black">Other</option>
+            <select id="category" class="input w-full text-gray-500">
+              <option value="">Category</option>
+              <option value="Supplies">Supplies</option>
+              <option value="Software">Software</option>
+              <option value="Labor">Labor</option>
+              <option value="Travel">Travel</option>
+              <option value="Utilities">Utilities</option>
+              <option value="Other">Other</option>
             </select>
-            <input type="text" id="customCategory" placeholder="Custom category" class="input w-full mt-2 hidden" />
+            <input id="customCategory" type="text" placeholder="Custom category" class="input mt-2 hidden w-full" />
           </div>
 
           <!-- Payment Method -->
           <div>
-            <select id="paymentMethod" class="input w-full text-gray-500" required>
-              <option disabled selected value="">Payment Method</option>
-              <option value="Cash" class="text-black">Cash</option>
-              <option value="Credit Card" class="text-black">Credit Card</option>
-              <option value="Bank Transfer" class="text-black">Bank Transfer</option>
-              <option value="PayPal" class="text-black">PayPal</option>
-              <option value="Stripe" class="text-black">Stripe</option>
-              <option value="Venmo" class="text-black">Venmo</option>
-              <option value="Other" class="text-black">Other</option>
+            <select id="paymentMethod" class="input w-full text-gray-500">
+              <option value="">Payment Method</option>
+              <option value="Cash">Cash</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="PayPal">PayPal</option>
+              <option value="Stripe">Stripe</option>
+              <option value="Venmo">Venmo</option>
+              <option value="Other">Other</option>
             </select>
-            <input type="text" id="customPayment" placeholder="Custom payment method" class="input w-full mt-2 hidden" />
+            <input id="customPayment" type="text" placeholder="Custom payment method" class="input mt-2 hidden w-full" />
           </div>
 
-          <!-- Notes + Date -->
           <textarea id="notes" placeholder="Notes (optional)" class="input w-full"></textarea>
           <input type="date" id="date" class="input w-full" required />
 
@@ -113,38 +106,31 @@
 
           <!-- Recurring Fields -->
           <div id="recurring-section" class="space-y-2 hidden">
-            <select id="frequency" class="input w-full text-gray-500" required>
-              <option disabled selected value="">Repeat Every</option>
-              <option value="Daily" class="text-black">Daily</option>
-              <option value="Weekly" class="text-black">Weekly</option>
-              <option value="Monthly" class="text-black">Monthly</option>
-              <option value="Yearly" class="text-black">Yearly</option>
+            <select id="frequency" class="input w-full text-gray-500">
+              <option value="">Repeat Every</option>
+              <option value="Daily">Daily</option>
+              <option value="Weekly">Weekly</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Yearly">Yearly</option>
             </select>
             <input type="date" id="endDate" class="input w-full" />
             <input type="text" id="recurringLabel" placeholder="Recurring label (optional)" class="input w-full" />
           </div>
 
-          <!-- Submit Button -->
-          <button type="submit"
-            class="w-full bg-blue text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
+          <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 transition">
             Save Expense
           </button>
         </form>
-        <p id="expense-status" class="text-sm mt-4 text-center"></p>
+        <p id="expense-status" class="text-sm mt-2 text-center"></p>
       </section>
 
-      <!-- Expense Entries -->
-      <section>
-        <h3 class="text-xl font-semibold text-center mb-4">Your Expenses</h3>
-        <div id="expense-list" class="space-y-4 w-full"></div>
-      </section>
+      <!-- Expense Table (spreadsheet) will go here -->
+      <section id="expense-table-section"></section>
 
     </div>
   </main>
 
-  <!-- Chart.js (not yet used) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Footer + Component Loader -->
+  <!-- Footer -->
   <div id="footer"></div>
   <script src="/js/components.js"></script>
   <script src="/js/expense.js"></script>
