@@ -165,17 +165,51 @@
   <!-- Table -->
   <div class="overflow-x-auto">
     <table class="w-full text-sm text-left border dark:border-gray-700">
-      <thead class="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-white">
-        <tr>
-          <th class="px-4 py-2">Date</th>
-          <th class="px-4 py-2">Source</th>
-          <th class="px-4 py-2">Amount</th>
-          <th class="px-4 py-2">Category</th>
-          <th class="px-4 py-2">Payment</th>
-          <th class="px-4 py-2">Notes</th>
-          <th class="px-4 py-2">Recurring</th>
-        </tr>
-      </thead>
+   <thead class="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-white">
+  <tr>
+    <!-- Date -->
+    <th class="px-4 py-2 relative group">
+      Date <span class="ml-1 cursor-pointer">&#x25BC;</span>
+      <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+        <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="asc">Oldest → Newest</button>
+        <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="desc">Newest → Oldest</button>
+      </div>
+    </th>
+
+    <!-- Source -->
+    <th class="px-4 py-2 relative group">
+      Source <span class="ml-1 cursor-pointer">&#x25BC;</span>
+      <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+        <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="asc">A → Z</button>
+        <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="desc">Z → A</button>
+      </div>
+    </th>
+
+    <!-- Amount -->
+    <th class="px-4 py-2 relative group">
+      Amount <span class="ml-1 cursor-pointer">&#x25BC;</span>
+      <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+        <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="asc">Low → High</button>
+        <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="desc">High → Low</button>
+      </div>
+    </th>
+
+    <!-- Category -->
+    <th class="px-4 py-2 relative group">
+      Category <span class="ml-1 cursor-pointer">&#x25BC;</span>
+      <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+        <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="asc">A → Z</button>
+        <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="desc">Z → A</button>
+      </div>
+    </th>
+
+    <!-- The rest are not sortable -->
+    <th class="px-4 py-2">Payment</th>
+    <th class="px-4 py-2">Notes</th>
+    <th class="px-4 py-2">Recurring</th>
+  </tr>
+</thead>
+
       <tbody id="revenue-table-body" class="bg-white dark:bg-black text-black dark:text-white">
         <!-- Table rows inserted by JS -->
       </tbody>
