@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Biznance – Revenue</title>
+  <title>Biznance – Expenses</title>
 
   <!-- TailwindCSS + Theme -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -59,11 +59,11 @@
   <main class="flex-1 flex flex-col px-4 py-8">
     <div class="w-full max-w-6xl mx-auto space-y-12">
 
-      <!-- Revenue Form -->
+      <!-- Expense Form -->
       <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6">
-        <h2 class="text-2xl font-bold text-green text-center">Add Revenue</h2>
-        <form id="revenue-form" class="space-y-4">
-          <input id="source" type="text" placeholder="Revenue Source" required class="input w-full" />
+        <h2 class="text-2xl font-bold text-blue text-center">Add Expense</h2>
+        <form id="expense-form" class="space-y-4">
+          <input id="source" type="text" placeholder="Expense Name" required class="input w-full" />
           <input id="amount" type="number" step="0.01" placeholder="Amount (USD)" required class="input w-full" />
 
           <!-- Category -->
@@ -73,7 +73,7 @@
               <option value="Product Sales">Product Sales</option>
               <option value="Service Income">Service Income</option>
               <option value="Freelance">Freelance</option>
-              <option value="Ad Revenue">Ad Revenue</option>
+              <option value="Ad Expense">Ad Expense</option>
               <option value="Sponsorship">Sponsorship</option>
               <option value="Investments">Investments</option>
               <option value="Other">Other</option>
@@ -101,7 +101,7 @@
 
           <!-- Recurring Toggle -->
           <label class="flex items-center space-x-2 text-sm">
-            <input type="checkbox" id="recurring-revenue" class="form-checkbox" />
+            <input type="checkbox" id="recurring-expense" class="form-checkbox" />
             <span>Make this recurring</span>
           </label>
 
@@ -118,18 +118,18 @@
             <input type="text" id="recurringLabel" placeholder="Recurring label (optional)" class="input w-full" />
           </div>
 
-          <button type="submit" class="w-full bg-green text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
-            Save Revenue
+          <button type="submit" class="w-full bg-blue text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
+            Save Expense
           </button>
         </form>
-        <p id="revenue-status" class="text-sm mt-2 text-center"></p>
+        <p id="Expense-status" class="text-sm mt-2 text-center"></p>
       </section>
 
-      <!-- Revenue Table & Filters -->
-      <!-- Revenue Spreadsheet Section (Styled like the form) -->
+      <!-- Expense Table & Filters -->
+      <!-- Expense Spreadsheet Section (Styled like the form) -->
 <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6 w-full">
   <div class="flex justify-between items-center">
-    <h2 class="text-2xl font-bold text-green text-center w-full">Revenue Spreadsheet</h2>
+    <h2 class="text-2xl font-bold text-blue text-center w-full">Expense Spreadsheet</h2>
   </div>
 
   <!-- Filters Toggle -->
@@ -140,7 +140,7 @@
   </div>
 
   <!-- Filters -->
-  <div id="revenue-filters" class="flex flex-wrap gap-4 mb-4 hidden">
+  <div id="Expense-filters" class="flex flex-wrap gap-4 mb-4 hidden">
     <select id="filter-category" class="input w-40 text-gray-500">
       <option value="">All Categories</option>
     </select>
@@ -211,7 +211,7 @@
   </tr>
 </thead>
 
-      <tbody id="revenue-table-body" class="bg-white dark:bg-black text-black dark:text-white">
+      <tbody id="expense-table-body" class="bg-white dark:bg-black text-black dark:text-white">
         <!-- Table rows inserted by JS -->
       </tbody>
     </table>
@@ -220,8 +220,8 @@
 <!-- Show More Button -->
 <div class="mt-6">
   <button
-    id="toggle-revenue-table"
-    class="w-full bg-green text-white py-2 rounded font-semibold hover:bg-opacity-90 transition"
+    id="toggle-expense-table"
+    class="w-full bg-blue text-white py-2 rounded font-semibold hover:bg-opacity-90 transition"
   >
     Show All
   </button>
@@ -236,7 +236,7 @@
   <!-- Footer -->
   <div id="footer"></div>
   <script src="/js/components.js"></script>
-  <script src="/js/revenue.js"></script>
+  <script src="/js/expense.js"></script>
 
   <style>
     .input {
