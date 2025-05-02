@@ -1,5 +1,3 @@
-// Assumes Firebase is initialized in the HTML
-
 firebase.auth().onAuthStateChanged(user => {
   if (!user) {
     window.location.href = "/login.html";
@@ -8,7 +6,31 @@ firebase.auth().onAuthStateChanged(user => {
     const form = document.getElementById("revenue-form");
     const status = document.getElementById("revenue-status");
 
-    // Load and display revenue entries
+    const categorySelect = document.getElementById("category");
+    const customCategory = document.getElementById("customCategory");
+
+    const paymentSelect = document.getElementById("paymentMethod");
+    const customPayment = document.getElementById("customPayment");
+
+    const recurringToggle = document.getElementById("recurring-revenue");
+    const recurringSection = document.getElementById("recurring-section");
+
+    // Show/hide recurring section
+    recurringToggle.addEventListener("change", () => {
+      recurringSection.classList.toggle("hidden", !recurringToggle.checked);
+    });
+
+    // Show/hide custom category input
+    categorySelect.addEventListener("change", () => {
+      customCategory.classList.toggle("hidden", categorySelect.value !== "Other");
+    });
+
+    // Show/hide custom payment method input
+    paymentSelect.addEventListener("change", () => {
+      customPayment.classList.toggle("hidden", paymentSelect.value !== "Other");
+    });
+
+    // Load entries
     async function loadRevenueEntries() {
       const list = document.getElementById("revenue-list");
       list.innerHTML = "<p class='text-gray-500 text-center'>Loading...</p>";
@@ -24,7 +46,7 @@ firebase.auth().onAuthStateChanged(user => {
           return;
         }
 
-        list.innerHTML = ""; // Clear existing
+        list.innerHTML = "";
 
         snapshot.forEach(doc => {
           const entry = doc.data();
@@ -44,7 +66,6 @@ firebase.auth().onAuthStateChanged(user => {
           list.appendChild(item);
         });
 
-        // Hook up delete buttons
         document.querySelectorAll(".delete-btn").forEach(button => {
           button.addEventListener("click", async () => {
             const id = button.getAttribute("data-id");
@@ -56,36 +77,55 @@ firebase.auth().onAuthStateChanged(user => {
             }
           });
         });
-
       } catch (err) {
         list.innerHTML = `<p class='text-red-500'>Error loading revenue: ${err.message}</p>`;
       }
     }
 
-    // Submit revenue form
+    // Submit form
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const source = form.source.value;
       const amount = parseFloat(form.amount.value);
-      const isRecurring = document.getElementById("recurring-revenue").checked;
+      const category = categorySelect.value === "Other" ? customCategory.value.trim() : categorySelect.value;
+      const paymentMethod = paymentSelect.value === "Other" ? customPayment.value.trim() : paymentSelect.value;
+      const notes = document.getElementById("notes").value.trim();
+      const date = document.getElementById("date").value;
+      const isRecurring = recurringToggle.checked;
+
+      const entryData = {
+        uid: user.uid,
+        source,
+        amount,
+        category,
+        paymentMethod,
+        notes,
+        date: new Date(date),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      };
 
       try {
-        // Save to revenue
-        await db.collection("revenue").add({
-          uid: user.uid,
-          source: source,
-          amount: amount,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        await db.collection("revenue").add(entryData);
 
-        // Optionally save to recurring
+        // Handle recurring
         if (isRecurring) {
+          const frequency = document.getElementById("frequency").value;
+          const endDate = document.getElementById("endDate").value;
+          const recurringLabel = document.getElementById("recurringLabel").value.trim();
+
           await db.collection("recurring").add({
             uid: user.uid,
             type: "revenue",
-            source: source,
-            amount: amount,
+            source,
+            amount,
+            category,
+            paymentMethod,
+            notes,
+            frequency,
+            endDate: new Date(endDate),
+            label: recurringLabel,
+            startDate: new Date(date),
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
           });
         }
@@ -93,15 +133,17 @@ firebase.auth().onAuthStateChanged(user => {
         status.textContent = "✅ Revenue saved!";
         status.style.color = "green";
         form.reset();
-        loadRevenueEntries();
+        recurringSection.classList.add("hidden");
+        customCategory.classList.add("hidden");
+        customPayment.classList.add("hidden");
 
+        loadRevenueEntries();
       } catch (err) {
         status.textContent = "❌ " + err.message;
         status.style.color = "red";
       }
     });
 
-    // Initial load
     loadRevenueEntries();
   }
 });
