@@ -306,7 +306,7 @@
   const startOfYear = new Date(now.getFullYear(), 0, 1);
 
   const filteredData = rawData.filter(entry => {
-    const date = new Date(entry.date);
+    const date = entry.date.toDate ? entry.date.toDate() : new Date(entry.date);
     if (range === 'today') return date >= startOfToday;
     if (range === 'week') return date >= startOfWeek;
     if (range === 'month') return date >= startOfMonth;
