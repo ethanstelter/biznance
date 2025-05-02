@@ -138,10 +138,48 @@
       </section>
 
       <!-- Revenue Entries -->
-      <section>
-        <h3 class="text-xl font-semibold text-center mb-4">Your Revenue Entries</h3>
-        <div id="revenue-list" class="space-y-4 w-full"></div>
-      </section>
+      <section class="space-y-4 w-full">
+  <h3 class="text-xl font-semibold text-center mb-2">Recent Revenue</h3>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap gap-4 mb-4 justify-center">
+    <select id="filter-category" class="input w-40 text-gray-500">
+      <option value="">All Categories</option>
+    </select>
+    <select id="filter-payment" class="input w-40 text-gray-500">
+      <option value="">All Payment Methods</option>
+    </select>
+    <input type="date" id="filter-start-date" class="input w-40" />
+    <input type="date" id="filter-end-date" class="input w-40" />
+    <input type="text" id="filter-search" class="input w-56" placeholder="Search by source or notes" />
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm text-left border dark:border-gray-700">
+      <thead class="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-white">
+        <tr>
+          <th class="px-4 py-2 cursor-pointer" data-sort="date">Date</th>
+          <th class="px-4 py-2 cursor-pointer" data-sort="source">Source</th>
+          <th class="px-4 py-2 cursor-pointer" data-sort="amount">Amount</th>
+          <th class="px-4 py-2 cursor-pointer" data-sort="category">Category</th>
+          <th class="px-4 py-2 cursor-pointer" data-sort="paymentMethod">Payment</th>
+          <th class="px-4 py-2">Notes</th>
+          <th class="px-4 py-2">Recurring</th>
+        </tr>
+      </thead>
+      <tbody id="revenue-table-body" class="bg-white dark:bg-black text-black dark:text-white">
+        <!-- Rows will be inserted by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Show More Button -->
+  <div class="text-center mt-4">
+    <button id="toggle-revenue-table" class="text-blue-600 hover:underline">Show All</button>
+  </div>
+</section>
+
 
     </div>
   </main>
