@@ -31,56 +31,124 @@ firebase.auth().onAuthStateChanged(user => {
     });
 
     // Load entries
-    async function loadRevenueEntries() {
-      const list = document.getElementById("revenue-list");
-      list.innerHTML = "<p class='text-gray-500 text-center'>Loading...</p>";
+   function loadRevenueEntries() {
+  const tableBody = document.getElementById("revenue-table-body");
+  const showAllBtn = document.getElementById("toggle-revenue-table");
 
-      try {
-        const snapshot = await db.collection("revenue")
-          .where("uid", "==", user.uid)
-          .orderBy("timestamp", "desc")
-          .get();
+  let allEntries = [];
+  let showingAll = false;
+  let currentSort = { field: "date", asc: false };
 
-        if (snapshot.empty) {
-          list.innerHTML = "<p class='text-gray-500 text-center'>No revenue entries yet.</p>";
-          return;
-        }
+  const filterCategory = document.getElementById("filter-category");
+  const filterPayment = document.getElementById("filter-payment");
+  const filterStart = document.getElementById("filter-start-date");
+  const filterEnd = document.getElementById("filter-end-date");
+  const filterSearch = document.getElementById("filter-search");
 
-        list.innerHTML = "";
+  function applyFiltersAndRender() {
+    let filtered = [...allEntries];
 
-        snapshot.forEach(doc => {
-          const entry = doc.data();
-          const id = doc.id;
+    // Apply category
+    const catVal = filterCategory.value.trim();
+    if (catVal) filtered = filtered.filter(e => e.category === catVal);
 
-          const item = document.createElement("div");
-          item.className = "bg-white dark:bg-neutral-900 p-4 rounded shadow flex justify-between items-center";
+    // Apply payment
+    const payVal = filterPayment.value.trim();
+    if (payVal) filtered = filtered.filter(e => e.paymentMethod === payVal);
 
-          item.innerHTML = `
-            <div>
-              <p class="font-semibold text-black dark:text-white">${entry.source}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">$${entry.amount.toFixed(2)}</p>
-            </div>
-            <button data-id="${id}" class="text-red-500 hover:text-red-700 font-semibold delete-btn">Delete</button>
-          `;
+    // Apply date range
+    const start = filterStart.value ? new Date(filterStart.value) : null;
+    const end = filterEnd.value ? new Date(filterEnd.value) : null;
+    if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
+    if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
 
-          list.appendChild(item);
-        });
-
-        document.querySelectorAll(".delete-btn").forEach(button => {
-          button.addEventListener("click", async () => {
-            const id = button.getAttribute("data-id");
-            try {
-              await db.collection("revenue").doc(id).delete();
-              loadRevenueEntries();
-            } catch (err) {
-              alert("Error deleting: " + err.message);
-            }
-          });
-        });
-      } catch (err) {
-        list.innerHTML = `<p class='text-red-500'>Error loading revenue: ${err.message}</p>`;
-      }
+    // Apply search
+    const searchVal = filterSearch.value.toLowerCase();
+    if (searchVal) {
+      filtered = filtered.filter(e =>
+        e.source.toLowerCase().includes(searchVal) ||
+        e.notes.toLowerCase().includes(searchVal)
+      );
     }
+
+    // Sort
+    filtered.sort((a, b) => {
+      const valA = a[currentSort.field];
+      const valB = b[currentSort.field];
+      if (valA < valB) return currentSort.asc ? -1 : 1;
+      if (valA > valB) return currentSort.asc ? 1 : -1;
+      return 0;
+    });
+
+    renderTable(filtered);
+  }
+
+  function renderTable(data) {
+    const rows = showingAll ? data : data.slice(0, 5);
+
+    tableBody.innerHTML = rows.map(entry => `
+      <tr class="border-t dark:border-gray-700">
+        <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
+        <td class="px-4 py-2">${entry.source}</td>
+        <td class="px-4 py-2">$${entry.amount.toFixed(2)}</td>
+        <td class="px-4 py-2">${entry.category}</td>
+        <td class="px-4 py-2">${entry.paymentMethod}</td>
+        <td class="px-4 py-2">${entry.notes || ""}</td>
+        <td class="px-4 py-2 text-center">${entry.recurring ? "✅" : ""}</td>
+      </tr>
+    `).join("");
+
+    showAllBtn.textContent = showingAll ? "Collapse" : "Show All";
+  }
+
+  // Fetch entries
+  db.collection("revenue")
+    .where("uid", "==", user.uid)
+    .orderBy("timestamp", "desc")
+    .get()
+    .then(snapshot => {
+      allEntries = snapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+          ...d,
+          date: d.date?.toDate?.() || new Date(0),
+          amount: parseFloat(d.amount),
+          recurring: !!d.frequency // optional fallback
+        };
+      });
+
+      // Populate dropdown filters
+      const categories = [...new Set(allEntries.map(e => e.category))];
+      const payments = [...new Set(allEntries.map(e => e.paymentMethod))];
+      filterCategory.innerHTML += categories.map(c => `<option value="${c}">${c}</option>`).join("");
+      filterPayment.innerHTML += payments.map(p => `<option value="${p}">${p}</option>`).join("");
+
+      applyFiltersAndRender();
+    });
+
+  // Events
+  [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el => {
+    el.addEventListener("input", applyFiltersAndRender);
+  });
+
+  showAllBtn.addEventListener("click", () => {
+    showingAll = !showingAll;
+    applyFiltersAndRender();
+  });
+
+  // Sortable headers
+  document.querySelectorAll("[data-sort]").forEach(th => {
+    th.addEventListener("click", () => {
+      const field = th.getAttribute("data-sort");
+      if (currentSort.field === field) {
+        currentSort.asc = !currentSort.asc;
+      } else {
+        currentSort = { field, asc: true };
+      }
+      applyFiltersAndRender();
+    });
+  });
+}
 
     // Submit form
     form.addEventListener("submit", async (e) => {
