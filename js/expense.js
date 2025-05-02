@@ -53,7 +53,7 @@ firebase.auth().onAuthStateChanged(user => {
       category,
       paymentMethod,
       notes,
-      date: new Date(date),
+     date: new Date(date + "T00:00:00"),
       isRecurring,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -77,7 +77,7 @@ firebase.auth().onAuthStateChanged(user => {
           frequency: document.getElementById("frequency").value,
           endDate: new Date(document.getElementById("endDate").value),
           label: document.getElementById("recurringLabel").value.trim(),
-          startDate: new Date(date),
+          startDate: new Date(date + "T00:00:00"),
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
