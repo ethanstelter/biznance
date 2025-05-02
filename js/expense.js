@@ -94,7 +94,7 @@ firebase.auth().onAuthStateChanged(user => {
       status.style.color = "red";
     }
   });
-let allEntries = [];
+
   // Load and render spreadsheet
   function loadExpenseEntries() {
     const tableBody = document.getElementById("expense-table-body");
@@ -109,8 +109,22 @@ let allEntries = [];
     const filterSearch = document.getElementById("filter-search");
     const filterRecurring = document.getElementById("filter-recurring");
 
-    
+    let allEntries = [];
     let showingAll = false;
+
+    const summaryRange = document.getElementById("summary-range");
+const summaryStart = document.getElementById("summary-start");
+const summaryEnd = document.getElementById("summary-end");
+
+summaryRange.addEventListener("change", () => {
+  const showCustom = summaryRange.value === "custom";
+  summaryStart.classList.toggle("hidden", !showCustom);
+  summaryEnd.classList.toggle("hidden", !showCustom);
+  updateSummary(allEntries);
+});
+summaryStart.addEventListener("input", () => updateSummary(allEntries));
+summaryEnd.addEventListener("input", () => updateSummary(allEntries));
+
 
     // Toggle filter UI
     filterToggleBtn.addEventListener("click", () => {
@@ -178,6 +192,8 @@ document.querySelectorAll(".sort-option").forEach(btn => {
   });
 });
     }
+
+    updateSummary(allEntries);
 
     function renderTable(data) {
       const rows = showingAll ? data : data.slice(0, 5);
@@ -255,6 +271,54 @@ document.querySelectorAll(".sort-option").forEach(btn => {
       applyFiltersAndRender();
     });
   }
+function updateSummary(entries) {
+  const totalElement = document.getElementById("summary-total");
+  const range = document.getElementById("summary-range").value;
+  const startInput = document.getElementById("summary-start");
+  const endInput = document.getElementById("summary-end");
+
+  let filtered = [...entries];
+
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfDay);
+  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+  let start, end;
+
+  switch (range) {
+    case "today":
+      start = startOfDay;
+      break;
+    case "week":
+      start = startOfWeek;
+      break;
+    case "month":
+      start = startOfMonth;
+      break;
+    case "year":
+      start = startOfYear;
+      break;
+    case "custom":
+      start = new Date(startInput.value);
+      end = new Date(endInput.value);
+      break;
+    default:
+      start = null;
+  }
+
+  if (start) {
+    filtered = filtered.filter(e => new Date(e.date) >= start);
+  }
+  if (end) {
+    filtered = filtered.filter(e => new Date(e.date) <= end);
+  }
+
+  const total = filtered.reduce((sum, e) => sum + e.amount, 0);
+  totalElement.textContent = `$${total.toFixed(2)}`;
+}
 
   loadExpenseEntries();
 });
