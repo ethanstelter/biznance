@@ -291,85 +291,83 @@
 <script>
   let revenueChart;
 
-  async function fetchAndRenderRevenueChart(range = 'all', startDate = null, endDate = null) {
-    const db = firebase.firestore();
-    const snapshot = await db.collection("revenue").get();
+ async function fetchAndRenderRevenueChart(range = 'all', startDate = null, endDate = null) {
+  const db = firebase.firestore();
+  const snapshot = await db.collection("revenue").get();
 
-    const rawData = snapshot.docs.map(doc => doc.data());
-    const filteredData = rawData.filter(entry => {
-      const date = new Date(entry.date);
-     const now = new Date();
-const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-const startOfWeek = new Date(now);
-startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start of week
-startOfWeek.setHours(0, 0, 0, 0);
-const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const rawData = snapshot.docs.map(doc => doc.data());
 
-if (range === 'today') {
-  return date >= startOfToday;
-}
-if (range === 'week') {
-  return date >= startOfWeek;
-}
-if (range === 'month') {
-  return date >= startOfMonth;
-}
-if (range === 'year') {
-  return date >= startOfYear;
-}
-      if (range === 'custom' && startDate && endDate) {
-        return date >= new Date(startDate) && date <= new Date(endDate);
-      }
-      return true;
-    });
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    const monthlySums = {};
-    filteredData.forEach(entry => {
-      const date = new Date(entry.date);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      if (!monthlySums[key]) monthlySums[key] = 0;
-      monthlySums[key] += Number(entry.amount);
-    });
+  const filteredData = rawData.filter(entry => {
+    const date = new Date(entry.date);
+    if (range === 'today') return date >= startOfToday;
+    if (range === 'week') return date >= startOfWeek;
+    if (range === 'month') return date >= startOfMonth;
+    if (range === 'year') return date >= startOfYear;
+    if (range === 'custom' && startDate && endDate) {
+      return date >= new Date(startDate) && date <= new Date(endDate);
+    }
+    return true;
+  });
 
-    const sortedKeys = Object.keys(monthlySums).sort();
-    const labels = sortedKeys;
-    const values = sortedKeys.map(key => monthlySums[key]);
+  // Dynamic grouping: by day or month
+  const useDayGrouping = ['today', 'week', 'month'].includes(range);
+  const groupedData = {};
 
-    const ctx = document.getElementById('revenueTrendChart').getContext('2d');
-    if (revenueChart) revenueChart.destroy();
+  filteredData.forEach(entry => {
+    const date = new Date(entry.date);
+    const key = useDayGrouping
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    if (!groupedData[key]) groupedData[key] = 0;
+    groupedData[key] += Number(entry.amount);
+  });
 
-    revenueChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Revenue ($)',
-          data: values,
-          borderColor: '#22DD86',
-          backgroundColor: 'rgba(34, 221, 134, 0.2)',
-          tension: 0.3,
-          fill: true
-        }]
+  const sortedKeys = Object.keys(groupedData).sort();
+  const labels = sortedKeys;
+  const values = sortedKeys.map(key => groupedData[key]);
+
+  const ctx = document.getElementById('revenueTrendChart').getContext('2d');
+  if (revenueChart) revenueChart.destroy();
+
+  revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Revenue ($)',
+        data: values,
+        borderColor: '#22DD86',
+        backgroundColor: 'rgba(34, 221, 134, 0.2)',
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { mode: 'index', intersect: false }
       },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-          tooltip: { mode: 'index', intersect: false }
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Revenue ($)' }
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: { display: true, text: 'Revenue ($)' }
-          },
-          x: {
-            title: { display: true, text: 'Month' }
-          }
+        x: {
+          title: { display: true, text: useDayGrouping ? 'Day' : 'Month' }
         }
       }
-    });
-  }
+    }
+  });
+}
 
   document.getElementById('revenueChartRange').addEventListener('change', function() {
     const range = this.value;
