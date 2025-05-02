@@ -238,6 +238,10 @@ document.querySelectorAll(".sort-option").forEach(btn => {
     [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el =>
       el.addEventListener("input", applyFiltersAndRender)
     );
+showAllBtn.addEventListener("click", () => {
+  showingAll = !showingAll;
+  applyFiltersAndRender();
+});
 
     filterRecurring.addEventListener("input", applyFiltersAndRender);
 
