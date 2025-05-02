@@ -82,6 +82,24 @@
     </div>
   </div>
 </section>
+<div class="mt-6 p-4 bg-white shadow rounded-lg">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-lg font-semibold text-gray-700">Monthly Expenses Trend</h2>
+    <select id="expensesChartRange" class="border rounded px-2 py-1 text-sm">
+      <option value="today">Today</option>
+      <option value="week">This Week</option>
+      <option value="month">This Month</option>
+      <option value="year">This Year</option>
+      <option value="all" selected>All Time</option>
+      <option value="custom">Custom Range</option>
+    </select>
+  </div>
+  <div id="expensesCustomRange" class="hidden space-x-2 mb-4">
+    <input type="date" id="expensesStartDate" class="border rounded px-2 py-1 text-sm">
+    <input type="date" id="expensesEndDate" class="border rounded px-2 py-1 text-sm">
+  </div>
+  <canvas id="expensesTrendChart" height="100"></canvas>
+</div>
 
       <!-- Expense Form -->
       <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6">
@@ -267,5 +285,110 @@
       @apply px-4 py-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  let expensesChart;
+
+  async function fetchAndRenderExpensesChart(range = 'all', startDate = null, endDate = null) {
+    const db = firebase.firestore();
+    const snapshot = await db.collection("expenses").get();
+
+    const rawData = snapshot.docs
+      .map(doc => doc.data())
+      .filter(entry => !!entry.date);
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    const filteredData = rawData.filter(entry => {
+      const date = entry.date?.toDate ? entry.date.toDate() : new Date(entry.date);
+      if (range === 'today') return date >= startOfToday;
+      if (range === 'week') return date >= startOfWeek;
+      if (range === 'month') return date >= startOfMonth;
+      if (range === 'year') return date >= startOfYear;
+      if (range === 'custom' && startDate && endDate) {
+        return date >= new Date(startDate) && date <= new Date(endDate);
+      }
+      return true;
+    });
+
+    const useDayGrouping = ['today', 'week', 'month'].includes(range);
+    const groupedData = {};
+
+    filteredData.forEach(entry => {
+      const date = entry.date?.toDate ? entry.date.toDate() : new Date(entry.date);
+      const key = useDayGrouping
+        ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+        : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (!groupedData[key]) groupedData[key] = 0;
+      groupedData[key] += Number(entry.amount);
+    });
+
+    const sortedKeys = Object.keys(groupedData).sort();
+    const labels = sortedKeys;
+    const values = sortedKeys.map(key => groupedData[key]);
+
+    const ctx = document.getElementById('expensesTrendChart').getContext('2d');
+    if (expensesChart) expensesChart.destroy();
+
+    expensesChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Expenses ($)',
+          data: values,
+          borderColor: '#3B82F6', // blue
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Expenses ($)' }
+          },
+          x: {
+            title: { display: true, text: useDayGrouping ? 'Day' : 'Month' }
+          }
+        }
+      }
+    });
+  }
+
+  document.getElementById('expensesChartRange').addEventListener('change', function () {
+    const range = this.value;
+    const customDiv = document.getElementById('expensesCustomRange');
+    if (range === 'custom') {
+      customDiv.classList.remove('hidden');
+    } else {
+      customDiv.classList.add('hidden');
+      fetchAndRenderExpensesChart(range);
+    }
+  });
+
+  document.getElementById('expensesEndDate').addEventListener('change', () => {
+    const start = document.getElementById('expensesStartDate').value;
+    const end = document.getElementById('expensesEndDate').value;
+    if (start && end) {
+      fetchAndRenderExpensesChart('custom', start, end);
+    }
+  });
+
+  window.addEventListener('load', () => fetchAndRenderExpensesChart());
+</script>
+
 </body>
 </html>
