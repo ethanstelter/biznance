@@ -70,64 +70,76 @@
       <!-- Revenue Form -->
       <section class="bg-white dark:bg-neutral-900 p-6 rounded shadow w-full">
         <h2 class="text-2xl font-bold text-green mb-4 text-center">Add Revenue</h2>
-        <form id="revenue-form" class="space-y-4">
-          <input type="text" id="source" placeholder="Revenue Source" required
-            class="input w-full" />
-          <input type="number" id="amount" placeholder="Amount (USD)" step="0.01" required
-            class="input w-full" />
+     <form id="revenue-form" class="space-y-4">
 
-          <!-- Category -->
-          <div>
-            <select id="category" class="input w-full">
-              <option value="Consulting">Consulting</option>
-              <option value="Sales">Sales</option>
-              <option value="Affiliate">Affiliate</option>
-              <option value="Other">Other</option>
-            </select>
-            <input type="text" id="customCategory" placeholder="Custom category"
-              class="input w-full mt-2 hidden" />
-          </div>
+  <!-- Revenue Source -->
+  <input type="text" id="source" placeholder="Revenue Source" required class="input w-full" />
 
-          <!-- Payment Method -->
-          <div>
-            <select id="paymentMethod" class="input w-full">
-              <option value="Cash">Cash</option>
-              <option value="Credit Card">Credit Card</option>
-              <option value="Paypal">Paypal</option>
-              <option value="Other">Other</option>
-            </select>
-            <input type="text" id="customPayment" placeholder="Custom payment method"
-              class="input w-full mt-2 hidden" />
-          </div>
+  <!-- Amount -->
+  <input type="number" id="amount" placeholder="Amount (USD)" step="0.01" required class="input w-full" />
 
-          <!-- Notes + Date -->
-          <textarea id="notes" placeholder="Notes (optional)" class="input w-full"></textarea>
-          <input type="date" id="date" required class="input w-full" />
+  <!-- Category -->
+  <div>
+    <select id="category" class="input w-full text-gray-500" required>
+      <option disabled selected value="">Category</option>
+      <option value="Product Sales" class="text-black">Product Sales</option>
+      <option value="Service Income" class="text-black">Service Income</option>
+      <option value="Freelance" class="text-black">Freelance</option>
+      <option value="Ad Revenue" class="text-black">Ad Revenue</option>
+      <option value="Sponsorship" class="text-black">Sponsorship</option>
+      <option value="Investments" class="text-black">Investments</option>
+      <option value="Other" class="text-black">Other</option>
+    </select>
+    <input type="text" id="customCategory" placeholder="Custom category" class="input w-full mt-2 hidden" />
+  </div>
 
-          <!-- Recurring Toggle -->
-          <label class="flex items-center space-x-2 text-sm">
-            <input type="checkbox" id="recurring-revenue" class="form-checkbox" />
-            <span>Make this recurring</span>
-          </label>
+  <!-- Payment Method -->
+  <div>
+    <select id="paymentMethod" class="input w-full text-gray-500" required>
+      <option disabled selected value="">Payment Method</option>
+      <option value="Cash" class="text-black">Cash</option>
+      <option value="Credit Card" class="text-black">Credit Card</option>
+      <option value="Bank Transfer" class="text-black">Bank Transfer</option>
+      <option value="PayPal" class="text-black">PayPal</option>
+      <option value="Stripe" class="text-black">Stripe</option>
+      <option value="Venmo" class="text-black">Venmo</option>
+      <option value="Other" class="text-black">Other</option>
+    </select>
+    <input type="text" id="customPayment" placeholder="Custom payment method" class="input w-full mt-2 hidden" />
+  </div>
 
-          <!-- Recurring Fields -->
-          <div id="recurring-section" class="space-y-2 hidden">
-            <select id="frequency" class="input w-full">
-              <option value="Daily">Daily</option>
-              <option value="Weekly">Weekly</option>
-              <option value="Monthly">Monthly</option>
-            </select>
-            <input type="date" id="endDate" class="input w-full" />
-            <input type="text" id="recurringLabel" placeholder="Recurring label"
-              class="input w-full" />
-          </div>
+  <!-- Notes -->
+  <textarea id="notes" placeholder="Notes (optional)" class="input w-full"></textarea>
 
-          <!-- Submit Button -->
-          <button type="submit"
-            class="w-full bg-green text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
-            Save Revenue
-          </button>
-        </form>
+  <!-- Date -->
+  <input type="date" id="date" class="input w-full" required />
+
+  <!-- Recurring Toggle -->
+  <label class="flex items-center space-x-2 text-sm">
+    <input type="checkbox" id="recurring-revenue" class="form-checkbox" />
+    <span>Make this recurring</span>
+  </label>
+
+  <!-- Recurring Fields -->
+  <div id="recurring-section" class="space-y-2 hidden">
+    <select id="frequency" class="input w-full text-gray-500" required>
+      <option disabled selected value="">Repeat Every</option>
+      <option value="Daily" class="text-black">Daily</option>
+      <option value="Weekly" class="text-black">Weekly</option>
+      <option value="Monthly" class="text-black">Monthly</option>
+      <option value="Yearly" class="text-black">Yearly</option>
+    </select>
+    <input type="date" id="endDate" class="input w-full" />
+    <input type="text" id="recurringLabel" placeholder="Recurring label (optional)" class="input w-full" />
+  </div>
+
+  <!-- Submit Button -->
+  <button type="submit"
+    class="w-full bg-green text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
+    Save Revenue
+  </button>
+</form>
+
         <p id="revenue-status" class="text-sm mt-4 text-center"></p>
       </section>
 
