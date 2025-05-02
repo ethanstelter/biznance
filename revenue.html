@@ -126,54 +126,60 @@
       </section>
 
       <!-- Revenue Table & Filters -->
-      <section class="space-y-6 w-full">
-        <div class="flex justify-between items-center">
-          <h3 class="text-xl font-semibold">Revenue Spreadsheet</h3>
-          <button id="toggle-filters" class="px-3 py-1 text-sm rounded bg-gray-200 dark:bg-neutral-800 hover:bg-gray-300 dark:hover:bg-neutral-700 transition">
-            Show Filters
-          </button>
-        </div>
+      <!-- Revenue Spreadsheet Section (Styled like the form) -->
+<section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6 w-full">
+  <div class="flex justify-between items-center">
+    <h2 class="text-2xl font-bold text-blue text-center w-full">Revenue Spreadsheet</h2>
+  </div>
 
-        <!-- Filters -->
-        <div id="revenue-filters" class="flex flex-wrap gap-4 mb-2 hidden">
-          <select id="filter-category" class="input w-40 text-gray-500">
-            <option value="">All Categories</option>
-          </select>
-          <select id="filter-payment" class="input w-40 text-gray-500">
-            <option value="">All Payment Methods</option>
-          </select>
-          <input type="date" id="filter-start-date" class="input w-40" />
-          <input type="date" id="filter-end-date" class="input w-40" />
-          <input type="text" id="filter-search" class="input w-56" placeholder="Search by source or notes" />
-        </div>
+  <!-- Filters Toggle -->
+  <div class="flex justify-start">
+    <button id="toggle-filters" class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-neutral-800 hover:bg-gray-300 dark:hover:bg-neutral-700 transition">
+      Show Filters
+    </button>
+  </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left border dark:border-gray-700">
-            <thead class="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-white">
-              <tr>
-                <th class="px-4 py-2">Date</th>
-                <th class="px-4 py-2">Source</th>
-                <th class="px-4 py-2">Amount</th>
-                <th class="px-4 py-2">Category</th>
-                <th class="px-4 py-2">Payment</th>
-                <th class="px-4 py-2">Notes</th>
-                <th class="px-4 py-2">Recurring</th>
-              </tr>
-            </thead>
-            <tbody id="revenue-table-body" class="bg-white dark:bg-black text-black dark:text-white">
-              <!-- Table rows inserted by JS -->
-            </tbody>
-          </table>
-        </div>
+  <!-- Filters -->
+  <div id="revenue-filters" class="flex flex-wrap gap-4 mb-4 hidden">
+    <select id="filter-category" class="input w-40 text-gray-500">
+      <option value="">All Categories</option>
+    </select>
+    <select id="filter-payment" class="input w-40 text-gray-500">
+      <option value="">All Payment Methods</option>
+    </select>
+    <input type="date" id="filter-start-date" class="input w-40" />
+    <input type="date" id="filter-end-date" class="input w-40" />
+    <input type="text" id="filter-search" class="input w-56" placeholder="Search by source or notes" />
+  </div>
 
-        <!-- Show More Button -->
-        <div class="text-center">
-          <button id="toggle-revenue-table" class="px-6 py-2 rounded bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
-            Show All
-          </button>
-        </div>
-      </section>
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left border dark:border-gray-700">
+      <thead class="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-white">
+        <tr>
+          <th class="px-4 py-2">Date</th>
+          <th class="px-4 py-2">Source</th>
+          <th class="px-4 py-2">Amount</th>
+          <th class="px-4 py-2">Category</th>
+          <th class="px-4 py-2">Payment</th>
+          <th class="px-4 py-2">Notes</th>
+          <th class="px-4 py-2">Recurring</th>
+        </tr>
+      </thead>
+      <tbody id="revenue-table-body" class="bg-white dark:bg-black text-black dark:text-white">
+        <!-- Table rows inserted by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Show More Button -->
+  <div class="text-center">
+    <button id="toggle-revenue-table" class="px-6 py-2 rounded bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
+      Show All
+    </button>
+  </div>
+</section>
+
     </div>
   </main>
 
