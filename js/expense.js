@@ -5,8 +5,8 @@ firebase.auth().onAuthStateChanged(user => {
   }
 
   const db = firebase.firestore();
-  const form = document.getElementById("revenue-form");
-  const status = document.getElementById("revenue-status");
+  const form = document.getElementById("expense-form");
+  const status = document.getElementById("expense-status");
 
   const categorySelect = document.getElementById("category");
   const customCategory = document.getElementById("customCategory");
@@ -14,7 +14,7 @@ firebase.auth().onAuthStateChanged(user => {
   const paymentSelect = document.getElementById("paymentMethod");
   const customPayment = document.getElementById("customPayment");
 
-  const recurringToggle = document.getElementById("recurring-revenue");
+  const recurringToggle = document.getElementById("recurring-expense");
   const recurringSection = document.getElementById("recurring-section");
 
   // Autofill dates
@@ -62,12 +62,12 @@ firebase.auth().onAuthStateChanged(user => {
     }
 
     try {
-      await db.collection("revenue").add(entryData);
+      await db.collection("expense").add(entryData);
 
       if (isRecurring) {
         await db.collection("recurring").add({
           uid: user.uid,
-          type: "revenue",
+          type: "expense",
           source,
           amount,
           category,
@@ -81,14 +81,14 @@ firebase.auth().onAuthStateChanged(user => {
         });
       }
 
-      status.textContent = "✅ Revenue saved!";
+      status.textContent = "✅ expense saved!";
       status.style.color = "green";
       form.reset();
       recurringSection.classList.add("hidden");
       customCategory.classList.add("hidden");
       customPayment.classList.add("hidden");
 
-      loadRevenueEntries();
+      loadexpenseEntries();
     } catch (err) {
       status.textContent = "❌ " + err.message;
       status.style.color = "red";
@@ -96,11 +96,11 @@ firebase.auth().onAuthStateChanged(user => {
   });
 
   // Load and render spreadsheet
-  function loadRevenueEntries() {
-    const tableBody = document.getElementById("revenue-table-body");
-    const showAllBtn = document.getElementById("toggle-revenue-table");
+  function loadexpenseEntries() {
+    const tableBody = document.getElementById("expense-table-body");
+    const showAllBtn = document.getElementById("toggle-expense-table");
     const filterToggleBtn = document.getElementById("toggle-filters");
-    const filtersWrapper = document.getElementById("revenue-filters");
+    const filtersWrapper = document.getElementById("expense-filters");
 
     const filterCategory = document.getElementById("filter-category");
     const filterPayment = document.getElementById("filter-payment");
@@ -158,8 +158,8 @@ firebase.auth().onAuthStateChanged(user => {
   button.addEventListener("click", async () => {
     const id = button.getAttribute("data-id");
     try {
-      await db.collection("revenue").doc(id).delete();
-      loadRevenueEntries(); // Refresh table
+      await db.collection("expense").doc(id).delete();
+      loadexpenseEntries(); // Refresh table
     } catch (err) {
       alert("Failed to delete: " + err.message);
     }
@@ -217,7 +217,7 @@ document.querySelectorAll(".sort-option").forEach(btn => {
     }
 
     // Firestore fetch
-    db.collection("revenue")
+    db.collection("expense")
       .where("uid", "==", user.uid)
       .orderBy("timestamp", "desc")
       .get()
@@ -254,5 +254,5 @@ document.querySelectorAll(".sort-option").forEach(btn => {
     });
   }
 
-  loadRevenueEntries();
+  loadexpenseEntries();
 });
