@@ -179,6 +179,7 @@ firebase.auth().onAuthStateChanged(user => {
         paymentMethod,
         notes,
         date: new Date(date),
+        isRecurring,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       };
 
