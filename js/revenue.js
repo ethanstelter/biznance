@@ -153,6 +153,19 @@ firebase.auth().onAuthStateChanged(user => {
       });
 
       renderTable(filtered);
+    
+      document.querySelectorAll(".delete-btn").forEach(button => {
+  button.addEventListener("click", async () => {
+    const id = button.getAttribute("data-id");
+    try {
+      await db.collection("revenue").doc(id).delete();
+      loadRevenueEntries(); // Refresh table
+    } catch (err) {
+      alert("Failed to delete: " + err.message);
+    }
+  });
+});
+
       // Reattach dropdown sort listeners after table is rendered
 document.querySelectorAll(".sort-option").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -167,20 +180,26 @@ document.querySelectorAll(".sort-option").forEach(btn => {
     function renderTable(data) {
       const rows = showingAll ? data : data.slice(0, 5);
 
-      tableBody.innerHTML = rows.map(entry => `
-        <tr class="border-t dark:border-gray-700">
-          <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
-          <td class="px-4 py-2">${entry.source}</td>
-          <td class="px-4 py-2">$${entry.amount.toFixed(2)}</td>
-          <td class="px-4 py-2">${entry.category}</td>
-          <td class="px-4 py-2">${entry.paymentMethod}</td>
-          <td class="px-4 py-2 max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis relative group">
-            <span class="block">${entry.notes}</span>
-            ${entry.notes.length > 30 ? `<div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-xs mt-1">${entry.notes}</div>` : ""}
-          </td>
-          <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
-        </tr>
-      `).join("");
+     tableBody.innerHTML = rows.map(entry => `
+  <tr class="border-t dark:border-gray-700 group">
+    <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
+    <td class="px-4 py-2">${entry.source}</td>
+    <td class="px-4 py-2">$${entry.amount.toFixed(2)}</td>
+    <td class="px-4 py-2">${entry.category}</td>
+    <td class="px-4 py-2">${entry.paymentMethod}</td>
+    <td class="px-4 py-2 max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis relative group">
+      <span class="block">${entry.notes}</span>
+      ${entry.notes.length > 30 ? `<div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-xs mt-1">${entry.notes}</div>` : ""}
+    </td>
+    <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
+    <td class="px-4 py-2 text-right">
+      <button class="delete-btn text-red-600 hover:text-red-800 hidden group-hover:inline" data-id="${entry.id}" title="Delete">
+        🗑️
+      </button>
+    </td>
+  </tr>
+`).join("");
+
 
       showAllBtn.textContent = showingAll ? "Collapse" : "Show All";
     }
@@ -191,16 +210,17 @@ document.querySelectorAll(".sort-option").forEach(btn => {
       .orderBy("timestamp", "desc")
       .get()
       .then(snapshot => {
-        allEntries = snapshot.docs.map(doc => {
-          const d = doc.data();
-          return {
-            ...d,
-            date: d.date?.toDate?.() || new Date(0),
-            amount: parseFloat(d.amount),
-            notes: d.notes || "",
-            frequency: d.frequency || ""
-          };
-        });
+     allEntries = snapshot.docs.map(doc => {
+  const d = doc.data();
+  return {
+    ...d,
+    id: doc.id, // 👈 Required for delete to work
+    date: d.date?.toDate?.() || new Date(0),
+    amount: parseFloat(d.amount),
+    notes: d.notes || "",
+    frequency: d.frequency || ""
+  };
+});
 
         const cats = [...new Set(allEntries.map(e => e.category))];
         const pays = [...new Set(allEntries.map(e => e.paymentMethod))];
