@@ -87,12 +87,14 @@
       <div class="mt-6 p-4 bg-white shadow rounded-lg">
   <div class="flex justify-between items-center mb-4">
     <h2 class="text-lg font-semibold text-gray-700">Monthly Revenue Trend</h2>
-    <select id="revenueChartRange" class="border rounded px-2 py-1 text-sm">
-      <option value="all">All Time</option>
-      <option value="year">This Year</option>
-      <option value="month">This Month</option>
-      <option value="custom">Custom Range</option>
-    </select>
+   <select id="revenueChartRange" class="border rounded px-2 py-1 text-sm">
+  <option value="today">Today</option>
+  <option value="week">This Week</option>
+  <option value="month">This Month</option>
+  <option value="year">This Year</option>
+  <option value="all" selected>All Time</option>
+  <option value="custom">Custom Range</option>
+</select>
   </div>
   <div id="customDateRange" class="hidden space-x-2 mb-4">
     <input type="date" id="revenueStartDate" class="border rounded px-2 py-1 text-sm">
@@ -296,14 +298,26 @@
     const rawData = snapshot.docs.map(doc => doc.data());
     const filteredData = rawData.filter(entry => {
       const date = new Date(entry.date);
-      if (range === 'month') {
-        const now = new Date();
-        return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-      }
-      if (range === 'year') {
-        const now = new Date();
-        return date.getFullYear() === now.getFullYear();
-      }
+     const now = new Date();
+const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+const startOfWeek = new Date(now);
+startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start of week
+startOfWeek.setHours(0, 0, 0, 0);
+const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+if (range === 'today') {
+  return date >= startOfToday;
+}
+if (range === 'week') {
+  return date >= startOfWeek;
+}
+if (range === 'month') {
+  return date >= startOfMonth;
+}
+if (range === 'year') {
+  return date >= startOfYear;
+}
       if (range === 'custom' && startDate && endDate) {
         return date >= new Date(startDate) && date <= new Date(endDate);
       }
