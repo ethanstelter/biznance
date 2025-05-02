@@ -26,9 +26,11 @@ firebase.auth().onAuthStateChanged(user => {
   recurringToggle.addEventListener("change", () => {
     recurringSection.classList.toggle("hidden", !recurringToggle.checked);
   });
-  categorySelect.addEventListener("change", () => {
-    customCategory.classList.toggle("hidden", categorySelect.value !== "Other");
-  });
+ categorySelect.addEventListener("change", () => {
+  const isOther = categorySelect.value === "Other";
+  customCategory.classList.toggle("hidden", !isOther);
+  customCategory.required = isOther;
+});
   paymentSelect.addEventListener("change", () => {
     customPayment.classList.toggle("hidden", paymentSelect.value !== "Other");
   });
