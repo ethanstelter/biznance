@@ -138,11 +138,18 @@
       </section>
 
       <!-- Revenue Entries -->
-      <section class="space-y-4 w-full">
+  <section class="space-y-4 w-full">
   <h3 class="text-xl font-semibold text-center mb-2">Recent Revenue</h3>
 
+  <!-- Filter Toggle -->
+  <div class="flex justify-end">
+    <button id="toggle-filters" class="text-sm px-4 py-1 rounded bg-gray-200 dark:bg-neutral-800 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-neutral-700 transition">
+      Show Filters
+    </button>
+  </div>
+
   <!-- Filters -->
-  <div class="flex flex-wrap gap-4 mb-4 justify-center">
+  <div id="revenue-filters" class="flex flex-wrap gap-4 mb-4 justify-center hidden">
     <select id="filter-category" class="input w-40 text-gray-500">
       <option value="">All Categories</option>
     </select>
@@ -156,27 +163,57 @@
 
   <!-- Table -->
   <div class="overflow-x-auto">
-    <table class="min-w-full text-sm text-left border dark:border-gray-700">
+    <table class="w-full min-w-[750px] text-sm text-left border dark:border-gray-700">
       <thead class="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-white">
         <tr>
-          <th class="px-4 py-2 cursor-pointer" data-sort="date">Date</th>
-          <th class="px-4 py-2 cursor-pointer" data-sort="source">Source</th>
-          <th class="px-4 py-2 cursor-pointer" data-sort="amount">Amount</th>
-          <th class="px-4 py-2 cursor-pointer" data-sort="category">Category</th>
-          <th class="px-4 py-2 cursor-pointer" data-sort="paymentMethod">Payment</th>
+          <th class="px-4 py-2 relative group">
+            Date
+            <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute top-full left-0 z-10 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 shadow rounded hidden group-hover:block">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="asc">Sort Ascending</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="desc">Sort Descending</button>
+            </div>
+          </th>
+          <th class="px-4 py-2 relative group">
+            Source
+            <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute top-full left-0 z-10 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 shadow rounded hidden group-hover:block">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="asc">A → Z</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="desc">Z → A</button>
+            </div>
+          </th>
+          <th class="px-4 py-2 relative group">
+            Amount
+            <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute top-full left-0 z-10 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 shadow rounded hidden group-hover:block">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="asc">Low → High</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="desc">High → Low</button>
+            </div>
+          </th>
+          <th class="px-4 py-2 relative group">
+            Category
+            <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute top-full left-0 z-10 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 shadow rounded hidden group-hover:block">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="asc">A → Z</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="desc">Z → A</button>
+            </div>
+          </th>
+          <th class="px-4 py-2">Payment</th>
           <th class="px-4 py-2">Notes</th>
           <th class="px-4 py-2">Recurring</th>
         </tr>
       </thead>
       <tbody id="revenue-table-body" class="bg-white dark:bg-black text-black dark:text-white">
-        <!-- Rows will be inserted by JS -->
+        <!-- Rows will be populated by JS -->
       </tbody>
     </table>
   </div>
 
   <!-- Show More Button -->
   <div class="text-center mt-4">
-    <button id="toggle-revenue-table" class="text-blue-600 hover:underline">Show All</button>
+    <button id="toggle-revenue-table" class="px-6 py-2 rounded bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
+      Show All
+    </button>
   </div>
 </section>
 
