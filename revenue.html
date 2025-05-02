@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Biznance – Revenue</title>
 
-  <!-- TailwindCSS + Custom Theme -->
+  <!-- TailwindCSS + Theme -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -28,7 +28,7 @@
 </head>
 <body class="bg-white dark:bg-black text-black dark:text-white font-sans min-h-screen flex flex-col">
 
-  <!-- Header will auto-load here -->
+  <!-- Header -->
   <div id="header"></div>
 
   <!-- Firebase -->
@@ -49,186 +49,98 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
   </script>
-
-  <!-- Auth Guard -->
   <script>
     auth.onAuthStateChanged(user => {
       if (!user) window.location.href = "/login.html";
     });
   </script>
 
-  <!-- Main Content -->
-  <main class="flex-1 flex flex-col items-center px-6 py-10">
-    <div class="w-full px-2 sm:px-4 lg:px-8">
+  <!-- Main Layout -->
+  <main class="flex-1 flex flex-col px-4 py-8">
+    <div class="w-full max-w-6xl mx-auto space-y-12">
 
       <!-- Revenue Form -->
-      <section class="bg-white dark:bg-neutral-900 p-6 rounded shadow w-full">
-        <h2 class="text-2xl font-bold text-green mb-4 text-center">Add Revenue</h2>
-     <form id="revenue-form" class="space-y-4">
+      <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6">
+        <h2 class="text-2xl font-bold text-green text-center">Add Revenue</h2>
+        <form id="revenue-form" class="space-y-4">
+          <input id="source" type="text" placeholder="Revenue Source" required class="input w-full" />
+          <input id="amount" type="number" step="0.01" placeholder="Amount (USD)" required class="input w-full" />
 
-  <!-- Revenue Source -->
-  <input type="text" id="source" placeholder="Revenue Source" required class="input w-full" />
+          <!-- Category -->
+          <div>
+            <select id="category" class="input w-full text-gray-500">
+              <option value="">Category</option>
+              <option value="Product Sales">Product Sales</option>
+              <option value="Service Income">Service Income</option>
+              <option value="Freelance">Freelance</option>
+              <option value="Ad Revenue">Ad Revenue</option>
+              <option value="Sponsorship">Sponsorship</option>
+              <option value="Investments">Investments</option>
+              <option value="Other">Other</option>
+            </select>
+            <input id="customCategory" type="text" placeholder="Custom category" class="input mt-2 hidden w-full" />
+          </div>
 
-  <!-- Amount -->
-  <input type="number" id="amount" placeholder="Amount (USD)" step="0.01" required class="input w-full" />
+          <!-- Payment Method -->
+          <div>
+            <select id="paymentMethod" class="input w-full text-gray-500">
+              <option value="">Payment Method</option>
+              <option value="Cash">Cash</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="PayPal">PayPal</option>
+              <option value="Stripe">Stripe</option>
+              <option value="Venmo">Venmo</option>
+              <option value="Other">Other</option>
+            </select>
+            <input id="customPayment" type="text" placeholder="Custom payment method" class="input mt-2 hidden w-full" />
+          </div>
 
-  <!-- Category -->
-  <div>
-    <select id="category" class="input w-full text-gray-500" required>
-      <option disabled selected value="">Category</option>
-      <option value="Product Sales" class="text-black">Product Sales</option>
-      <option value="Service Income" class="text-black">Service Income</option>
-      <option value="Freelance" class="text-black">Freelance</option>
-      <option value="Ad Revenue" class="text-black">Ad Revenue</option>
-      <option value="Sponsorship" class="text-black">Sponsorship</option>
-      <option value="Investments" class="text-black">Investments</option>
-      <option value="Other" class="text-black">Other</option>
-    </select>
-    <input type="text" id="customCategory" placeholder="Custom category" class="input w-full mt-2 hidden" />
-  </div>
+          <textarea id="notes" placeholder="Notes (optional)" class="input w-full"></textarea>
+          <input type="date" id="date" class="input w-full" required />
 
-  <!-- Payment Method -->
-  <div>
-    <select id="paymentMethod" class="input w-full text-gray-500" required>
-      <option disabled selected value="">Payment Method</option>
-      <option value="Cash" class="text-black">Cash</option>
-      <option value="Credit Card" class="text-black">Credit Card</option>
-      <option value="Bank Transfer" class="text-black">Bank Transfer</option>
-      <option value="PayPal" class="text-black">PayPal</option>
-      <option value="Stripe" class="text-black">Stripe</option>
-      <option value="Venmo" class="text-black">Venmo</option>
-      <option value="Other" class="text-black">Other</option>
-    </select>
-    <input type="text" id="customPayment" placeholder="Custom payment method" class="input w-full mt-2 hidden" />
-  </div>
+          <!-- Recurring Toggle -->
+          <label class="flex items-center space-x-2 text-sm">
+            <input type="checkbox" id="recurring-revenue" class="form-checkbox" />
+            <span>Make this recurring</span>
+          </label>
 
-  <!-- Notes -->
-  <textarea id="notes" placeholder="Notes (optional)" class="input w-full"></textarea>
+          <!-- Recurring Fields -->
+          <div id="recurring-section" class="space-y-2 hidden">
+            <select id="frequency" class="input w-full text-gray-500">
+              <option value="">Repeat Every</option>
+              <option value="Daily">Daily</option>
+              <option value="Weekly">Weekly</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Yearly">Yearly</option>
+            </select>
+            <input type="date" id="endDate" class="input w-full" />
+            <input type="text" id="recurringLabel" placeholder="Recurring label (optional)" class="input w-full" />
+          </div>
 
-  <!-- Date -->
-  <input type="date" id="date" class="input w-full" required />
-
-  <!-- Recurring Toggle -->
-  <label class="flex items-center space-x-2 text-sm">
-    <input type="checkbox" id="recurring-revenue" class="form-checkbox" />
-    <span>Make this recurring</span>
-  </label>
-
-  <!-- Recurring Fields -->
-  <div id="recurring-section" class="space-y-2 hidden">
-    <select id="frequency" class="input w-full text-gray-500" required>
-      <option disabled selected value="">Repeat Every</option>
-      <option value="Daily" class="text-black">Daily</option>
-      <option value="Weekly" class="text-black">Weekly</option>
-      <option value="Monthly" class="text-black">Monthly</option>
-      <option value="Yearly" class="text-black">Yearly</option>
-    </select>
-    <input type="date" id="endDate" class="input w-full" />
-    <input type="text" id="recurringLabel" placeholder="Recurring label (optional)" class="input w-full" />
-  </div>
-
-  <!-- Submit Button -->
-  <button type="submit"
-    class="w-full bg-green text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
-    Save Revenue
-  </button>
-</form>
-
-        <p id="revenue-status" class="text-sm mt-4 text-center"></p>
+          <button type="submit" class="w-full bg-green text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
+            Save Revenue
+          </button>
+        </form>
+        <p id="revenue-status" class="text-sm mt-2 text-center"></p>
       </section>
 
-      <!-- Revenue Entries -->
-  <section class="space-y-4 w-full">
-  <h3 class="text-xl font-semibold text-center mb-2">Recent Revenue</h3>
-
-  <!-- Filter Toggle -->
-  <div class="flex justify-end">
-    <button id="toggle-filters" class="text-sm px-4 py-1 rounded bg-gray-200 dark:bg-neutral-800 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-neutral-700 transition">
-      Show Filters
-    </button>
-  </div>
-
-  <!-- Filters -->
-  <div id="revenue-filters" class="flex flex-wrap gap-4 mb-4 justify-center hidden">
-    <select id="filter-category" class="input w-40 text-gray-500">
-      <option value="">All Categories</option>
-    </select>
-    <select id="filter-payment" class="input w-40 text-gray-500">
-      <option value="">All Payment Methods</option>
-    </select>
-    <input type="date" id="filter-start-date" class="input w-40" />
-    <input type="date" id="filter-end-date" class="input w-40" />
-    <input type="text" id="filter-search" class="input w-56" placeholder="Search by source or notes" />
-  </div>
-
-  <!-- Table -->
- <div class="w-full overflow-x-auto">
-  <table class="w-full text-sm text-left border dark:border-gray-700 ...
-      <thead class="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-white">
-        <tr>
-          <th class="px-4 py-2 relative group">
-            Date
-            <span class="ml-1 cursor-pointer">&#x25BC;</span>
-            <div class="absolute top-full left-0 z-10 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 shadow rounded hidden group-hover:block">
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="asc">Sort Ascending</button>
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="desc">Sort Descending</button>
-            </div>
-          </th>
-          <th class="px-4 py-2 relative group">
-            Source
-            <span class="ml-1 cursor-pointer">&#x25BC;</span>
-            <div class="absolute top-full left-0 z-10 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 shadow rounded hidden group-hover:block">
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="asc">A → Z</button>
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="desc">Z → A</button>
-            </div>
-          </th>
-          <th class="px-4 py-2 relative group">
-            Amount
-            <span class="ml-1 cursor-pointer">&#x25BC;</span>
-            <div class="absolute top-full left-0 z-10 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 shadow rounded hidden group-hover:block">
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="asc">Low → High</button>
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="desc">High → Low</button>
-            </div>
-          </th>
-          <th class="px-4 py-2 relative group">
-            Category
-            <span class="ml-1 cursor-pointer">&#x25BC;</span>
-            <div class="absolute top-full left-0 z-10 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 shadow rounded hidden group-hover:block">
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="asc">A → Z</button>
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="desc">Z → A</button>
-            </div>
-          </th>
-          <th class="px-4 py-2">Payment</th>
-          <th class="px-4 py-2">Notes</th>
-          <th class="px-4 py-2">Recurring</th>
-        </tr>
-      </thead>
-      <tbody id="revenue-table-body" class="bg-white dark:bg-black text-black dark:text-white">
-        <!-- Rows will be populated by JS -->
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Show More Button -->
-  <div class="text-center mt-4">
-    <button id="toggle-revenue-table" class="px-6 py-2 rounded bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
-      Show All
-    </button>
-  </div>
-</section>
-
-
+      <!-- Table & Filters -->
+      <section id="revenue-table-section">
+        <!-- Full table + filters injected here by JS -->
+      </section>
     </div>
   </main>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Footer + Component Loader -->
+  <!-- Footer -->
   <div id="footer"></div>
   <script src="/js/components.js"></script>
-  <!-- Revenue Logic -->
   <script src="/js/revenue.js"></script>
 
+  <!-- Chart.js if needed later -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Style Shortcuts -->
   <style>
     .input {
       @apply px-4 py-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white;
