@@ -254,5 +254,5 @@ document.querySelectorAll(".sort-option").forEach(btn => {
     });
   }
 
-  loadexpenseEntries();
+  loadExpenseEntries();
 });
