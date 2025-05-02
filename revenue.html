@@ -83,7 +83,24 @@
     </div>
   </div>
 </section>
- 
+
+      <div class="mt-6 p-4 bg-white shadow rounded-lg">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-lg font-semibold text-gray-700">Monthly Revenue Trend</h2>
+    <select id="revenueChartRange" class="border rounded px-2 py-1 text-sm">
+      <option value="all">All Time</option>
+      <option value="year">This Year</option>
+      <option value="month">This Month</option>
+      <option value="custom">Custom Range</option>
+    </select>
+  </div>
+  <div id="customDateRange" class="hidden space-x-2 mb-4">
+    <input type="date" id="revenueStartDate" class="border rounded px-2 py-1 text-sm">
+    <input type="date" id="revenueEndDate" class="border rounded px-2 py-1 text-sm">
+  </div>
+  <canvas id="revenueTrendChart" height="100"></canvas>
+</div>
+
       <!-- Revenue Form -->
       <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6">
         <h2 class="text-2xl font-bold text-green text-center">Add Revenue</h2>
@@ -268,5 +285,99 @@
       @apply px-4 py-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  let revenueChart;
+
+  async function fetchAndRenderRevenueChart(range = 'all', startDate = null, endDate = null) {
+    const db = firebase.firestore();
+    const snapshot = await db.collection("revenue").get();
+
+    const rawData = snapshot.docs.map(doc => doc.data());
+    const filteredData = rawData.filter(entry => {
+      const date = new Date(entry.date);
+      if (range === 'month') {
+        const now = new Date();
+        return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+      }
+      if (range === 'year') {
+        const now = new Date();
+        return date.getFullYear() === now.getFullYear();
+      }
+      if (range === 'custom' && startDate && endDate) {
+        return date >= new Date(startDate) && date <= new Date(endDate);
+      }
+      return true;
+    });
+
+    const monthlySums = {};
+    filteredData.forEach(entry => {
+      const date = new Date(entry.date);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (!monthlySums[key]) monthlySums[key] = 0;
+      monthlySums[key] += Number(entry.amount);
+    });
+
+    const sortedKeys = Object.keys(monthlySums).sort();
+    const labels = sortedKeys;
+    const values = sortedKeys.map(key => monthlySums[key]);
+
+    const ctx = document.getElementById('revenueTrendChart').getContext('2d');
+    if (revenueChart) revenueChart.destroy();
+
+    revenueChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Revenue ($)',
+          data: values,
+          borderColor: '#22DD86',
+          backgroundColor: 'rgba(34, 221, 134, 0.2)',
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Revenue ($)' }
+          },
+          x: {
+            title: { display: true, text: 'Month' }
+          }
+        }
+      }
+    });
+  }
+
+  document.getElementById('revenueChartRange').addEventListener('change', function() {
+    const range = this.value;
+    const customDiv = document.getElementById('customDateRange');
+    if (range === 'custom') {
+      customDiv.classList.remove('hidden');
+    } else {
+      customDiv.classList.add('hidden');
+      fetchAndRenderRevenueChart(range);
+    }
+  });
+
+  document.getElementById('revenueEndDate').addEventListener('change', () => {
+    const start = document.getElementById('revenueStartDate').value;
+    const end = document.getElementById('revenueEndDate').value;
+    if (start && end) {
+      fetchAndRenderRevenueChart('custom', start, end);
+    }
+  });
+
+  window.addEventListener('load', () => fetchAndRenderRevenueChart());
+</script>
+
 </body>
 </html>
