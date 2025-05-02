@@ -270,11 +270,17 @@
     Show All
   </button>
 </div>
-
-
 </section>
-
     </div>
+
+<div class="mt-6 p-4 bg-white shadow rounded-lg">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-lg font-semibold text-gray-700">Revenue by Category</h2>
+    <button id="toggleCategoryView" class="text-sm text-blue-500 hover:underline hidden">Show All</button>
+  </div>
+  <canvas id="revenueCategoryChart" height="100"></canvas>
+</div>
+  
   </main>
 
   <!-- Footer -->
@@ -389,6 +395,104 @@
   });
 
   window.addEventListener('load', () => fetchAndRenderRevenueChart());
+  </script>
+
+
+  <script>
+  let revenueCategoryChart;
+  let showAllCategories = false;
+
+  async function fetchAndRenderRevenueCategoryChart() {
+    const db = firebase.firestore();
+    const snapshot = await db.collection("revenue").get();
+
+    const rawData = snapshot.docs
+      .map(doc => doc.data())
+      .filter(entry => !!entry.category && !!entry.amount && !!entry.date);
+
+    // Group revenue by category
+    const categorySums = {};
+    rawData.forEach(entry => {
+      const cat = entry.category.trim();
+      categorySums[cat] = (categorySums[cat] || 0) + Number(entry.amount);
+    });
+
+    const sortedCategories = Object.entries(categorySums)
+      .sort((a, b) => b[1] - a[1]); // descending
+
+    let displayData, showToggle = false;
+
+    if (sortedCategories.length > 5 && !showAllCategories) {
+      const top5 = sortedCategories.slice(0, 5);
+      const misc = sortedCategories.slice(5);
+      const miscTotal = misc.reduce((sum, [, amt]) => sum + amt, 0);
+      displayData = [...top5, ["Miscellaneous", miscTotal]];
+      showToggle = true;
+    } else {
+      displayData = sortedCategories;
+      showToggle = sortedCategories.length > 5;
+    }
+
+    const labels = displayData.map(([label]) => label);
+    const values = displayData.map(([, value]) => value);
+    const colors = labels.map(label => label === "Miscellaneous"
+      ? "#9CA3AF" // gray for misc
+      : `hsl(${Math.random() * 360}, 70%, 60%)`
+    );
+
+    const ctx = document.getElementById('revenueCategoryChart').getContext('2d');
+    if (revenueCategoryChart) revenueCategoryChart.destroy();
+
+    revenueCategoryChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const value = context.parsed;
+                const label = context.label;
+                return `${label}: $${value.toFixed(2)}`;
+              }
+            }
+          }
+        },
+        onClick: (e, elements) => {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const label = labels[index];
+            if (label === "Miscellaneous") {
+              showAllCategories = true;
+              fetchAndRenderRevenueCategoryChart();
+            }
+          }
+        }
+      }
+    });
+
+    const toggleButton = document.getElementById("toggleCategoryView");
+    toggleButton.classList.toggle("hidden", !showToggle);
+    toggleButton.textContent = showAllCategories ? "Show Top 5 Only" : "Show All";
+    toggleButton.onclick = () => {
+      showAllCategories = !showAllCategories;
+      fetchAndRenderRevenueCategoryChart();
+    };
+  }
+
+  window.addEventListener('load', () => {
+    fetchAndRenderRevenueCategoryChart();
+  });
 </script>
 
 </body>
