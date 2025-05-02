@@ -112,6 +112,19 @@ firebase.auth().onAuthStateChanged(user => {
     let allEntries = [];
     let showingAll = false;
 
+    const summaryRange = document.getElementById("summary-range");
+const summaryStart = document.getElementById("summary-start");
+const summaryEnd = document.getElementById("summary-end");
+
+summaryRange.addEventListener("change", () => {
+  const showCustom = summaryRange.value === "custom";
+  summaryStart.classList.toggle("hidden", !showCustom);
+  summaryEnd.classList.toggle("hidden", !showCustom);
+  updateSummary(allEntries);
+});
+summaryStart.addEventListener("input", () => updateSummary(allEntries));
+summaryEnd.addEventListener("input", () => updateSummary(allEntries));
+
     // Toggle filter UI
     filterToggleBtn.addEventListener("click", () => {
       filtersWrapper.classList.toggle("hidden");
@@ -151,6 +164,8 @@ firebase.auth().onAuthStateChanged(user => {
         if (valA > valB) return currentSort.asc ? 1 : -1;
         return 0;
       });
+
+      updateSummary(allEntries);
 
       renderTable(filtered);
     
@@ -253,6 +268,54 @@ document.querySelectorAll(".sort-option").forEach(btn => {
       applyFiltersAndRender();
     });
   }
+function updateSummary(entries) {
+  const totalElement = document.getElementById("summary-total");
+  const range = document.getElementById("summary-range").value;
+  const startInput = document.getElementById("summary-start");
+  const endInput = document.getElementById("summary-end");
+
+  let filtered = [...entries];
+
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfDay);
+  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+  let start, end;
+
+  switch (range) {
+    case "today":
+      start = startOfDay;
+      break;
+    case "week":
+      start = startOfWeek;
+      break;
+    case "month":
+      start = startOfMonth;
+      break;
+    case "year":
+      start = startOfYear;
+      break;
+    case "custom":
+      start = new Date(startInput.value);
+      end = new Date(endInput.value);
+      break;
+    default:
+      start = null;
+  }
+
+  if (start) {
+    filtered = filtered.filter(e => new Date(e.date) >= start);
+  }
+  if (end) {
+    filtered = filtered.filter(e => new Date(e.date) <= end);
+  }
+
+  const total = filtered.reduce((sum, e) => sum + e.amount, 0);
+  totalElement.textContent = `$${total.toFixed(2)}`;
+}
 
   loadRevenueEntries();
 });
