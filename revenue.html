@@ -273,14 +273,14 @@
 </section>
     </div>
 
-  <!-- Pie Chart -->
-<section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6">
-  <div class="flex flex-wrap gap-4 items-center justify-center text-sm">
-    <h2 class="text-lg font-semibold text-gray-700">Revenue by Category</h2>
+<!-- Revenue Category Pie Chart -->
+<section class="mt-6 bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md max-w-4xl mx-auto">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold text-gray-700 dark:text-white">Revenue by Category</h2>
     <button id="toggleCategoryView" class="text-sm text-blue-500 hover:underline hidden">Show All</button>
   </div>
 
-  <div class="flex flex-col md:flex-row gap-6 w-full">
+  <div class="flex flex-col md:flex-row gap-6">
     <!-- Left: Chart -->
     <div class="flex-1 min-w-0">
       <canvas id="revenueCategoryChart" style="max-height: 280px;"></canvas>
@@ -288,10 +288,11 @@
 
     <!-- Right: Legend & Stats -->
     <div class="flex-1 space-y-2 text-sm flex flex-col justify-between min-w-0" id="revenueCategoryLegend">
-      <!-- Populated by JS -->
+      <!-- JS will populate this -->
     </div>
   </div>
-</div>
+</section>
+
 
   </main>
 
