@@ -274,20 +274,20 @@
     </div>
 
   <!-- Pie Chart -->
-<div class="mt-6 p-4 bg-white shadow rounded-lg max-w-6xl mx-auto">
+<div class="mt-6 p-4 bg-white shadow rounded-lg w-full">
   <div class="flex justify-between items-center mb-4">
     <h2 class="text-lg font-semibold text-gray-700">Revenue by Category</h2>
     <button id="toggleCategoryView" class="text-sm text-blue-500 hover:underline hidden">Show All</button>
   </div>
 
-  <div class="flex flex-col md:flex-row gap-6">
+  <div class="flex flex-col md:flex-row gap-6 w-full">
     <!-- Left: Chart -->
-    <div class="flex-1">
+    <div class="flex-1 min-w-0">
       <canvas id="revenueCategoryChart" style="max-height: 280px;"></canvas>
     </div>
 
     <!-- Right: Legend & Stats -->
-    <div class="flex-1 space-y-2 text-sm" id="revenueCategoryLegend">
+    <div class="flex-1 space-y-2 text-sm flex flex-col justify-between min-w-0" id="revenueCategoryLegend">
       <!-- Populated by JS -->
     </div>
   </div>
