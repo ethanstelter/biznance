@@ -107,6 +107,7 @@ firebase.auth().onAuthStateChanged(user => {
     const filterStart = document.getElementById("filter-start-date");
     const filterEnd = document.getElementById("filter-end-date");
     const filterSearch = document.getElementById("filter-search");
+    const filterRecurring = document.getElementById("filter-recurring");
 
     let allEntries = [];
     let showingAll = false;
@@ -138,6 +139,10 @@ firebase.auth().onAuthStateChanged(user => {
           e.notes.toLowerCase().includes(search)
         );
       }
+     
+      if (filterRecurring.checked) {
+  filtered = filtered.filter(e => e.isRecurring === true || e.frequency);
+}
 
       filtered.sort((a, b) => {
         const valA = a[currentSort.field];
@@ -200,6 +205,8 @@ firebase.auth().onAuthStateChanged(user => {
     [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el =>
       el.addEventListener("input", applyFiltersAndRender)
     );
+
+    filterRecurring.addEventListener("input", applyFiltersAndRender);
 
     showAllBtn.addEventListener("click", () => {
       showingAll = !showingAll;
