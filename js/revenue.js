@@ -22,189 +22,18 @@ firebase.auth().onAuthStateChanged(user => {
   document.getElementById("date").value = today;
   document.getElementById("endDate").value = today;
 
-  // Show/hide recurring section
+  // Recurring and custom option toggles
   recurringToggle.addEventListener("change", () => {
     recurringSection.classList.toggle("hidden", !recurringToggle.checked);
   });
-
   categorySelect.addEventListener("change", () => {
     customCategory.classList.toggle("hidden", categorySelect.value !== "Other");
   });
-
   paymentSelect.addEventListener("change", () => {
     customPayment.classList.toggle("hidden", paymentSelect.value !== "Other");
   });
 
-  function loadRevenueEntries() {
-  const tableBody = document.getElementById("revenue-table-body");
-  const showAllBtn = document.getElementById("toggle-revenue-table");
-  const filterToggleBtn = document.getElementById("toggle-filters");
-  const filtersWrapper = document.getElementById("revenue-filters");
-
-  let allEntries = [];
-  let showingAll = false;
-  let currentSort = { field: "date", asc: false };
-
-  const filterCategory = document.getElementById("filter-category");
-  const filterPayment = document.getElementById("filter-payment");
-  const filterStart = document.getElementById("filter-start-date");
-  const filterEnd = document.getElementById("filter-end-date");
-  const filterSearch = document.getElementById("filter-search");
-
-  // Toggle filters UI
-  filterToggleBtn.addEventListener("click", () => {
-    filtersWrapper.classList.toggle("hidden");
-    filterToggleBtn.textContent = filtersWrapper.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
-  });
-
-  function applyFiltersAndRender() {
-    let filtered = [...allEntries];
-
-    if (filterCategory.value) filtered = filtered.filter(e => e.category === filterCategory.value);
-    if (filterPayment.value) filtered = filtered.filter(e => e.paymentMethod === filterPayment.value);
-
-    const start = filterStart.value ? new Date(filterStart.value) : null;
-    const end = filterEnd.value ? new Date(filterEnd.value) : null;
-    if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
-    if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
-
-    const search = filterSearch.value.toLowerCase();
-    if (search) {
-      filtered = filtered.filter(e =>
-        e.source.toLowerCase().includes(search) ||
-        e.notes.toLowerCase().includes(search)
-      );
-    }
-
-    filtered.sort((a, b) => {
-      const valA = a[currentSort.field];
-      const valB = b[currentSort.field];
-      if (valA < valB) return currentSort.asc ? -1 : 1;
-      if (valA > valB) return currentSort.asc ? 1 : -1;
-      return 0;
-    });
-
-    renderTable(filtered);
-    renderChart(filtered);
-  }
-
-  function renderTable(data) {
-    const rows = showingAll ? data : data.slice(0, 5);
-
-    tableBody.innerHTML = rows.map(entry => `
-      <tr class="border-t dark:border-gray-700">
-        <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
-        <td class="px-4 py-2">${entry.source}</td>
-        <td class="px-4 py-2">$${entry.amount.toFixed(2)}</td>
-        <td class="px-4 py-2">${entry.category}</td>
-        <td class="px-4 py-2">${entry.paymentMethod}</td>
-        <td class="px-4 py-2 max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis relative group">
-          <span class="block">${entry.notes}</span>
-          ${entry.notes.length > 30 ? `<div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-xs mt-1">${entry.notes}</div>` : ""}
-        </td>
-        <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
-      </tr>
-    `).join("");
-
-    showAllBtn.textContent = showingAll ? "Collapse" : "Show All";
-  }
-
-  function renderChart(data) {
-    const ctx = document.getElementById("revenueChart").getContext("2d");
-    const totalsByDate = {};
-
-    data.forEach(entry => {
-      const key = new Date(entry.date).toISOString().split("T")[0];
-      if (!totalsByDate[key]) totalsByDate[key] = 0;
-      totalsByDate[key] += entry.amount;
-    });
-
-    const labels = Object.keys(totalsByDate).sort();
-    const values = labels.map(date => totalsByDate[date]);
-
-    if (window.revenueChartInstance) {
-      window.revenueChartInstance.destroy();
-    }
-
-    window.revenueChartInstance = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "Revenue",
-          data: values,
-          borderColor: "#22DD86",
-          backgroundColor: "rgba(59,130,246,0.1)",
-          tension: 0.3,
-          pointRadius: 3,
-          pointBackgroundColor: "#3B82F6"
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: { ticks: { color: "#888" }, grid: { color: "#eee" }},
-          y: { beginAtZero: true, ticks: { color: "#888" }, grid: { color: "#eee" }}
-        },
-        plugins: {
-          legend: {
-            labels: {
-              color: "#444",
-              font: { weight: "bold" }
-            }
-          }
-        }
-      }
-    });
-  }
-
-  // Firestore fetch
-  db.collection("revenue")
-    .where("uid", "==", user.uid)
-    .orderBy("timestamp", "desc")
-    .get()
-    .then(snapshot => {
-      allEntries = snapshot.docs.map(doc => {
-        const d = doc.data();
-        return {
-          ...d,
-          date: d.date?.toDate?.() || new Date(0),
-          amount: parseFloat(d.amount),
-          notes: d.notes || "",
-          frequency: d.frequency || ""
-        };
-      });
-
-      const cats = [...new Set(allEntries.map(e => e.category))];
-      const pays = [...new Set(allEntries.map(e => e.paymentMethod))];
-      filterCategory.innerHTML += cats.map(c => `<option value="${c}">${c}</option>`).join("");
-      filterPayment.innerHTML += pays.map(p => `<option value="${p}">${p}</option>`).join("");
-
-      applyFiltersAndRender();
-    });
-
-  // Event bindings
-  [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el =>
-    el.addEventListener("input", applyFiltersAndRender)
-  );
-
-  showAllBtn.addEventListener("click", () => {
-    showingAll = !showingAll;
-    applyFiltersAndRender();
-  });
-
-  document.querySelectorAll(".sort-option").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const field = btn.dataset.sort;
-      const dir = btn.dataset.dir;
-      currentSort = { field, asc: dir === "asc" };
-      applyFiltersAndRender();
-    });
-  });
-}
-
-  // Form submit
+  // Form submit handler
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -265,6 +94,118 @@ firebase.auth().onAuthStateChanged(user => {
       status.style.color = "red";
     }
   });
+
+  // Load and render spreadsheet
+  function loadRevenueEntries() {
+    const tableBody = document.getElementById("revenue-table-body");
+    const showAllBtn = document.getElementById("toggle-revenue-table");
+    const filterToggleBtn = document.getElementById("toggle-filters");
+    const filtersWrapper = document.getElementById("revenue-filters");
+
+    const filterCategory = document.getElementById("filter-category");
+    const filterPayment = document.getElementById("filter-payment");
+    const filterStart = document.getElementById("filter-start-date");
+    const filterEnd = document.getElementById("filter-end-date");
+    const filterSearch = document.getElementById("filter-search");
+
+    let allEntries = [];
+    let showingAll = false;
+
+    // Toggle filter UI
+    filterToggleBtn.addEventListener("click", () => {
+      filtersWrapper.classList.toggle("hidden");
+      filterToggleBtn.textContent = filtersWrapper.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
+    });
+
+    // Sortable fields (optional)
+    let currentSort = { field: "date", asc: false };
+
+    function applyFiltersAndRender() {
+      let filtered = [...allEntries];
+
+      if (filterCategory.value) filtered = filtered.filter(e => e.category === filterCategory.value);
+      if (filterPayment.value) filtered = filtered.filter(e => e.paymentMethod === filterPayment.value);
+
+      const start = filterStart.value ? new Date(filterStart.value) : null;
+      const end = filterEnd.value ? new Date(filterEnd.value) : null;
+      if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
+      if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
+
+      const search = filterSearch.value.toLowerCase();
+      if (search) {
+        filtered = filtered.filter(e =>
+          e.source.toLowerCase().includes(search) ||
+          e.notes.toLowerCase().includes(search)
+        );
+      }
+
+      filtered.sort((a, b) => {
+        const valA = a[currentSort.field];
+        const valB = b[currentSort.field];
+        if (valA < valB) return currentSort.asc ? -1 : 1;
+        if (valA > valB) return currentSort.asc ? 1 : -1;
+        return 0;
+      });
+
+      renderTable(filtered);
+    }
+
+    function renderTable(data) {
+      const rows = showingAll ? data : data.slice(0, 5);
+
+      tableBody.innerHTML = rows.map(entry => `
+        <tr class="border-t dark:border-gray-700">
+          <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
+          <td class="px-4 py-2">${entry.source}</td>
+          <td class="px-4 py-2">$${entry.amount.toFixed(2)}</td>
+          <td class="px-4 py-2">${entry.category}</td>
+          <td class="px-4 py-2">${entry.paymentMethod}</td>
+          <td class="px-4 py-2 max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis relative group">
+            <span class="block">${entry.notes}</span>
+            ${entry.notes.length > 30 ? `<div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-xs mt-1">${entry.notes}</div>` : ""}
+          </td>
+          <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
+        </tr>
+      `).join("");
+
+      showAllBtn.textContent = showingAll ? "Collapse" : "Show All";
+    }
+
+    // Firestore fetch
+    db.collection("revenue")
+      .where("uid", "==", user.uid)
+      .orderBy("timestamp", "desc")
+      .get()
+      .then(snapshot => {
+        allEntries = snapshot.docs.map(doc => {
+          const d = doc.data();
+          return {
+            ...d,
+            date: d.date?.toDate?.() || new Date(0),
+            amount: parseFloat(d.amount),
+            notes: d.notes || "",
+            frequency: d.frequency || ""
+          };
+        });
+
+        const cats = [...new Set(allEntries.map(e => e.category))];
+        const pays = [...new Set(allEntries.map(e => e.paymentMethod))];
+        filterCategory.innerHTML += cats.map(c => `<option value="${c}">${c}</option>`).join("");
+        filterPayment.innerHTML += pays.map(p => `<option value="${p}">${p}</option>`).join("");
+
+        applyFiltersAndRender();
+      });
+
+    // Bind filter + show all toggle
+    [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el =>
+      el.addEventListener("input", applyFiltersAndRender)
+    );
+
+    showAllBtn.addEventListener("click", () => {
+      showingAll = !showingAll;
+      applyFiltersAndRender();
+    });
+  }
 
   loadRevenueEntries();
 });
