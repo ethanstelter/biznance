@@ -31,7 +31,7 @@ firebase.auth().onAuthStateChanged(user => {
     });
 
     // Load entries
- function loadRevenueEntries() {
+function loadRevenueEntries() {
   const tableBody = document.getElementById("revenue-table-body");
   const showAllBtn = document.getElementById("toggle-revenue-table");
   const filterToggleBtn = document.getElementById("toggle-filters");
@@ -53,34 +53,27 @@ firebase.auth().onAuthStateChanged(user => {
     filterToggleBtn.textContent = filtersWrapper.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
   });
 
-  // Filter + Sort Handler
   function applyFiltersAndRender() {
     let filtered = [...allEntries];
 
-    // Category Filter
-    const catVal = filterCategory.value.trim();
-    if (catVal) filtered = filtered.filter(e => e.category === catVal);
+    // Apply filters
+    if (filterCategory.value) filtered = filtered.filter(e => e.category === filterCategory.value);
+    if (filterPayment.value) filtered = filtered.filter(e => e.paymentMethod === filterPayment.value);
 
-    // Payment Method Filter
-    const payVal = filterPayment.value.trim();
-    if (payVal) filtered = filtered.filter(e => e.paymentMethod === payVal);
-
-    // Date Range
     const start = filterStart.value ? new Date(filterStart.value) : null;
     const end = filterEnd.value ? new Date(filterEnd.value) : null;
     if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
     if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
 
-    // Search Filter
-    const searchVal = filterSearch.value.toLowerCase();
-    if (searchVal) {
+    const search = filterSearch.value.toLowerCase();
+    if (search) {
       filtered = filtered.filter(e =>
-        e.source.toLowerCase().includes(searchVal) ||
-        e.notes.toLowerCase().includes(searchVal)
+        e.source.toLowerCase().includes(search) ||
+        e.notes.toLowerCase().includes(search)
       );
     }
 
-    // Sorting
+    // Sort
     filtered.sort((a, b) => {
       const valA = a[currentSort.field];
       const valB = b[currentSort.field];
@@ -92,7 +85,6 @@ firebase.auth().onAuthStateChanged(user => {
     renderTable(filtered);
   }
 
-  // Render Table
   function renderTable(data) {
     const rows = showingAll ? data : data.slice(0, 5);
 
@@ -104,14 +96,14 @@ firebase.auth().onAuthStateChanged(user => {
         <td class="px-4 py-2">${entry.category}</td>
         <td class="px-4 py-2">${entry.paymentMethod}</td>
         <td class="px-4 py-2">${entry.notes || ""}</td>
-        <td class="px-4 py-2 text-center">${entry.isRecurring ? "✅" : ""}</td>
+        <td class="px-4 py-2 text-center">${entry.isRecurring ? "✅" : "—"}</td>
       </tr>
     `).join("");
 
     showAllBtn.textContent = showingAll ? "Collapse" : "Show All";
   }
 
-  // Fetch Firestore Entries
+  // Pull from Firestore
   db.collection("revenue")
     .where("uid", "==", user.uid)
     .orderBy("timestamp", "desc")
@@ -124,30 +116,28 @@ firebase.auth().onAuthStateChanged(user => {
           date: d.date?.toDate?.() || new Date(0),
           amount: parseFloat(d.amount),
           notes: d.notes || "",
-          isRecurring: !!(d.frequency || d.recurringDetails),
+          isRecurring: !!d.isRecurring
         };
       });
 
-      // Fill filter dropdowns
-      const categories = [...new Set(allEntries.map(e => e.category))];
-      const payments = [...new Set(allEntries.map(e => e.paymentMethod))];
-      filterCategory.innerHTML += categories.map(c => `<option value="${c}">${c}</option>`).join("");
-      filterPayment.innerHTML += payments.map(p => `<option value="${p}">${p}</option>`).join("");
+      const cats = [...new Set(allEntries.map(e => e.category))];
+      const pays = [...new Set(allEntries.map(e => e.paymentMethod))];
+      filterCategory.innerHTML += cats.map(c => `<option value="${c}">${c}</option>`).join("");
+      filterPayment.innerHTML += pays.map(p => `<option value="${p}">${p}</option>`).join("");
 
       applyFiltersAndRender();
     });
 
-  // Event Listeners
-  [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el => {
-    el.addEventListener("input", applyFiltersAndRender);
-  });
+  // Listeners
+  [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el =>
+    el.addEventListener("input", applyFiltersAndRender)
+  );
 
   showAllBtn.addEventListener("click", () => {
     showingAll = !showingAll;
     applyFiltersAndRender();
   });
 
-  // Dropdown sorting
   document.querySelectorAll(".sort-option").forEach(btn => {
     btn.addEventListener("click", () => {
       const field = btn.dataset.sort;
@@ -157,7 +147,6 @@ firebase.auth().onAuthStateChanged(user => {
     });
   });
 }
-
 
     // Submit form
     form.addEventListener("submit", async (e) => {
