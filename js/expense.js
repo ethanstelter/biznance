@@ -94,7 +94,7 @@ firebase.auth().onAuthStateChanged(user => {
       status.style.color = "red";
     }
   });
-
+let allEntries = [];
   // Load and render spreadsheet
   function loadexpenseEntries() {
     const tableBody = document.getElementById("expense-table-body");
@@ -109,7 +109,7 @@ firebase.auth().onAuthStateChanged(user => {
     const filterSearch = document.getElementById("filter-search");
     const filterRecurring = document.getElementById("filter-recurring");
 
-    let allEntries = [];
+    
     let showingAll = false;
 
     // Toggle filter UI
