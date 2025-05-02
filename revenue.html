@@ -279,12 +279,20 @@
     <h2 class="text-lg font-semibold text-gray-700">Revenue by Category</h2>
     <button id="toggleCategoryView" class="text-sm text-blue-500 hover:underline hidden">Show All</button>
   </div>
-  <div class="w-full max-w-full">
-    <canvas id="revenueCategoryChart" style="max-height: 300px;"></canvas>
+
+  <div class="flex flex-col md:flex-row gap-6">
+    <!-- Left: Chart -->
+    <div class="flex-1">
+      <canvas id="revenueCategoryChart" style="max-height: 280px;"></canvas>
+    </div>
+
+    <!-- Right: Legend & Stats -->
+    <div class="flex-1 space-y-2 text-sm" id="revenueCategoryLegend">
+      <!-- Populated by JS -->
+    </div>
   </div>
 </div>
 
-  
   </main>
 
   <!-- Footer -->
@@ -406,6 +414,28 @@
   let revenueCategoryChart;
   let showAllCategories = false;
 
+  const categoryColors = {
+    "Product Sales": "#f87171",
+    "Subscriptions": "#60a5fa",
+    "Sponsorships": "#34d399",
+    "Merch": "#fbbf24",
+    "Ads": "#a78bfa",
+    "Miscellaneous": "#9ca3af"
+    // Add more if needed, or generate fallback
+  };
+
+  function getColorForCategory(category) {
+    return categoryColors[category] || `hsl(${(category.hashCode() % 360)}, 70%, 60%)`;
+  }
+
+  String.prototype.hashCode = function () {
+    let hash = 0;
+    for (let i = 0; i < this.length; i++) {
+      hash = this.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return hash;
+  };
+
   async function fetchAndRenderRevenueCategoryChart() {
     const db = firebase.firestore();
     const snapshot = await db.collection("revenue").get();
@@ -414,16 +444,14 @@
       .map(doc => doc.data())
       .filter(entry => !!entry.category && !!entry.amount && !!entry.date);
 
-    // Group revenue by category
+    // Group by category
     const categorySums = {};
     rawData.forEach(entry => {
       const cat = entry.category.trim();
       categorySums[cat] = (categorySums[cat] || 0) + Number(entry.amount);
     });
 
-    const sortedCategories = Object.entries(categorySums)
-      .sort((a, b) => b[1] - a[1]); // descending
-
+    const sortedCategories = Object.entries(categorySums).sort((a, b) => b[1] - a[1]);
     let displayData, showToggle = false;
 
     if (sortedCategories.length > 5 && !showAllCategories) {
@@ -439,11 +467,9 @@
 
     const labels = displayData.map(([label]) => label);
     const values = displayData.map(([, value]) => value);
-    const colors = labels.map(label => label === "Miscellaneous"
-      ? "#9CA3AF" // gray for misc
-      : `hsl(${Math.random() * 360}, 70%, 60%)`
-    );
+    const colors = labels.map(label => getColorForCategory(label));
 
+    // Render Chart
     const ctx = document.getElementById('revenueCategoryChart').getContext('2d');
     if (revenueCategoryChart) revenueCategoryChart.destroy();
 
@@ -458,13 +484,12 @@
       },
       options: {
         responsive: true,
+        cutout: "60%",
         plugins: {
-          legend: {
-            position: 'bottom'
-          },
+          legend: { display: false },
           tooltip: {
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const value = context.parsed;
                 const label = context.label;
                 return `${label}: $${value.toFixed(2)}`;
@@ -485,6 +510,28 @@
       }
     });
 
+    // Custom Legend + Stats
+    const legendContainer = document.getElementById("revenueCategoryLegend");
+    legendContainer.innerHTML = "";
+
+    const total = values.reduce((sum, val) => sum + val, 0);
+    legendContainer.innerHTML += `
+      <div class="font-medium text-gray-800">Total Revenue: <span class="text-green-600 font-semibold">$${total.toFixed(2)}</span></div>
+      <div class="text-gray-500">Categories Used: ${labels.length}</div>
+      <hr class="my-2">
+    `;
+
+    displayData.forEach(([label, value]) => {
+      const color = getColorForCategory(label);
+      legendContainer.innerHTML += `
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full" style="background-color: ${color};"></span>
+          <span class="flex-1 text-gray-700">${label}</span>
+          <span class="text-gray-600 font-medium">$${value.toFixed(2)}</span>
+        </div>
+      `;
+    });
+
     const toggleButton = document.getElementById("toggleCategoryView");
     toggleButton.classList.toggle("hidden", !showToggle);
     toggleButton.textContent = showAllCategories ? "Show Top 5 Only" : "Show All";
@@ -498,6 +545,7 @@
     fetchAndRenderRevenueCategoryChart();
   });
 </script>
+
 
 </body>
 </html>
