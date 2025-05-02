@@ -87,7 +87,6 @@ firebase.auth().onAuthStateChanged(user => {
       recurringSection.classList.add("hidden");
       customCategory.classList.add("hidden");
       customPayment.classList.add("hidden");
-
       loadexpenseEntries();
     } catch (err) {
       status.textContent = "❌ " + err.message;
