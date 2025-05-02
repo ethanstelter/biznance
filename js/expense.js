@@ -120,7 +120,6 @@ summaryRange.addEventListener("change", () => {
   const showCustom = summaryRange.value === "custom";
   summaryStart.classList.toggle("hidden", !showCustom);
   summaryEnd.classList.toggle("hidden", !showCustom);
-  updateSummary(allEntries);
 });
 summaryStart.addEventListener("input", () => updateSummary(allEntries));
 summaryEnd.addEventListener("input", () => updateSummary(allEntries));
@@ -239,26 +238,29 @@ document.querySelectorAll(".sort-option").forEach(btn => {
       .where("uid", "==", user.uid)
       .orderBy("timestamp", "desc")
       .get()
-      .then(snapshot => {
-     allEntries = snapshot.docs.map(doc => {
-  const d = doc.data();
-  return {
-    ...d,
-    id: doc.id, // 👈 Required for delete to work
-    date: d.date?.toDate?.() || new Date(0),
-    amount: parseFloat(d.amount),
-    notes: d.notes || "",
-    frequency: d.frequency || ""
-  };
+     .then(snapshot => {
+  allEntries = snapshot.docs.map(doc => {
+    const d = doc.data();
+    return {
+      ...d,
+      id: doc.id,
+      date: d.date?.toDate?.() || new Date(0),
+      amount: parseFloat(d.amount),
+      notes: d.notes || "",
+      frequency: d.frequency || ""
+    };
+  });
+
+  updateSummary(allEntries); // ✅ Now runs with real data
+
+  const cats = [...new Set(allEntries.map(e => e.category))];
+  const pays = [...new Set(allEntries.map(e => e.paymentMethod))];
+  filterCategory.innerHTML += cats.map(c => `<option value="${c}">${c}</option>`).join("");
+  filterPayment.innerHTML += pays.map(p => `<option value="${p}">${p}</option>`).join("");
+
+  applyFiltersAndRender();
 });
 
-        const cats = [...new Set(allEntries.map(e => e.category))];
-        const pays = [...new Set(allEntries.map(e => e.paymentMethod))];
-        filterCategory.innerHTML += cats.map(c => `<option value="${c}">${c}</option>`).join("");
-        filterPayment.innerHTML += pays.map(p => `<option value="${p}">${p}</option>`).join("");
-
-        applyFiltersAndRender();
-      });
 
     // Bind filter + show all toggle
     [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el =>
