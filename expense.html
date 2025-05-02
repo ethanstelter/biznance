@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Biznance – [Expenses]</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biznance – Expenses</title>
 
   <!-- TailwindCSS + Custom Config -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -23,75 +23,136 @@
           }
         }
       }
-    }
+    };
   </script>
 </head>
 <body class="bg-white dark:bg-black text-black dark:text-white font-sans min-h-screen flex flex-col">
 
   <!-- Header will auto-load here -->
   <div id="header"></div>
-<!-- Firebase v8.10.1 SDKs -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCo5DMir__Aahm2jFjHrE5FMVMiw0SHJKg",
+      authDomain: "biznance-22126.firebaseapp.com",
+      projectId: "biznance-22126",
+      storageBucket: "biznance-22126.appspot.com",
+      messagingSenderId: "860851803576",
+      appId: "1:860851803576:web:5d4fb6b032346bba1cab4d",
+      measurementId: "G-045HJ2KPJP"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+  </script>
 
-<!-- Firebase Config & Initialization -->
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCo5DMir__Aahm2jFjHrE5FMVMiw0SHJKg",
-    authDomain: "biznance-22126.firebaseapp.com",
-    projectId: "biznance-22126",
-    storageBucket: "biznance-22126.firebasestorage.app",
-    messagingSenderId: "860851803576",
-    appId: "1:860851803576:web:5d4fb6b032346bba1cab4d",
-    measurementId: "G-045HJ2KPJP"
-  };
+  <!-- Auth Guard -->
+  <script>
+    auth.onAuthStateChanged(user => {
+      if (!user) window.location.href = "/login.html";
+    });
+  </script>
 
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-</script>
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center px-6 py-10">
+    <div class="w-full max-w-2xl space-y-10">
 
-<!-- Auth protection -->
-<script>
-  auth.onAuthStateChanged(user => {
-    if (!user) {
-      window.location.href = "/login.html";
-    }
-  });
-</script>
+      <!-- Expense Form -->
+      <section class="bg-white dark:bg-neutral-900 p-6 rounded shadow w-full">
+        <h2 class="text-2xl font-bold text-blue mb-4 text-center">Add Expense</h2>
+        <form id="expense-form" class="space-y-4">
 
-<main class="flex-1 flex flex-col items-center px-6 py-10">
-  <div class="w-full max-w-sm">
-    <h2 class="text-2xl font-bold text-blue dark:text-blue mb-6 text-center">Add Expense</h2>
-    <form id="expense-form" class="space-y-4">
-      <input type="text" id="category" placeholder="Expense Category" required
-        class="w-full px-4 py-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white">
-      <input type="number" id="amount" placeholder="Amount (USD)" required step="0.01"
-        class="w-full px-4 py-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white">
-     <label class="flex items-center space-x-2 text-sm text-black dark:text-white">
-  <input type="checkbox" id="recurring-expense" class="form-checkbox">
-  <span>Make this recurring</span>
-</label>
+          <!-- Source -->
+          <input type="text" id="source" placeholder="Expense Source" required class="input w-full" />
 
-      <button type="submit"
-        class="w-full bg-blue text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">Save Expense</button>
-    </form>
-    <p id="expense-status" class="text-sm mt-4 text-center text-black dark:text-white"></p>
-  </div>
-  <hr class="my-10 border-gray-300 dark:border-gray-700">
+          <!-- Amount -->
+          <input type="number" id="amount" placeholder="Amount (USD)" step="0.01" required class="input w-full" />
 
-<h3 class="text-xl font-semibold text-center text-black dark:text-white mb-4">Your Expenses</h3>
-<div id="expense-list" class="space-y-4 w-full max-w-sm mx-auto"></div>
+          <!-- Category -->
+          <div>
+            <select id="category" class="input w-full text-gray-500" required>
+              <option disabled selected value="">Category</option>
+              <option value="Office Supplies" class="text-black">Office Supplies</option>
+              <option value="Software" class="text-black">Software</option>
+              <option value="Marketing" class="text-black">Marketing</option>
+              <option value="Travel" class="text-black">Travel</option>
+              <option value="Utilities" class="text-black">Utilities</option>
+              <option value="Contractors" class="text-black">Contractors</option>
+              <option value="Other" class="text-black">Other</option>
+            </select>
+            <input type="text" id="customCategory" placeholder="Custom category" class="input w-full mt-2 hidden" />
+          </div>
 
-</main>
+          <!-- Payment Method -->
+          <div>
+            <select id="paymentMethod" class="input w-full text-gray-500" required>
+              <option disabled selected value="">Payment Method</option>
+              <option value="Cash" class="text-black">Cash</option>
+              <option value="Credit Card" class="text-black">Credit Card</option>
+              <option value="Bank Transfer" class="text-black">Bank Transfer</option>
+              <option value="PayPal" class="text-black">PayPal</option>
+              <option value="Stripe" class="text-black">Stripe</option>
+              <option value="Venmo" class="text-black">Venmo</option>
+              <option value="Other" class="text-black">Other</option>
+            </select>
+            <input type="text" id="customPayment" placeholder="Custom payment method" class="input w-full mt-2 hidden" />
+          </div>
 
-<script src="/js/expense.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Footer will auto-load here -->
+          <!-- Notes + Date -->
+          <textarea id="notes" placeholder="Notes (optional)" class="input w-full"></textarea>
+          <input type="date" id="date" class="input w-full" required />
+
+          <!-- Recurring Toggle -->
+          <label class="flex items-center space-x-2 text-sm">
+            <input type="checkbox" id="recurring-expense" class="form-checkbox" />
+            <span>Make this recurring</span>
+          </label>
+
+          <!-- Recurring Fields -->
+          <div id="recurring-section" class="space-y-2 hidden">
+            <select id="frequency" class="input w-full text-gray-500" required>
+              <option disabled selected value="">Repeat Every</option>
+              <option value="Daily" class="text-black">Daily</option>
+              <option value="Weekly" class="text-black">Weekly</option>
+              <option value="Monthly" class="text-black">Monthly</option>
+              <option value="Yearly" class="text-black">Yearly</option>
+            </select>
+            <input type="date" id="endDate" class="input w-full" />
+            <input type="text" id="recurringLabel" placeholder="Recurring label (optional)" class="input w-full" />
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit"
+            class="w-full bg-blue text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
+            Save Expense
+          </button>
+        </form>
+        <p id="expense-status" class="text-sm mt-4 text-center"></p>
+      </section>
+
+      <!-- Expense Entries -->
+      <section>
+        <h3 class="text-xl font-semibold text-center mb-4">Your Expenses</h3>
+        <div id="expense-list" class="space-y-4 w-full"></div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Chart.js (not yet used) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Footer + Component Loader -->
   <div id="footer"></div>
-
   <script src="/js/components.js"></script>
+  <script src="/js/expense.js"></script>
+
+  <style>
+    .input {
+      @apply px-4 py-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white;
+    }
+  </style>
 </body>
 </html>
