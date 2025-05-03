@@ -244,53 +244,84 @@ function loadProfitEntries() {
     renderTable(filtered);
   }
 
-  function renderTable(data) {
-    const rows = showingAll ? data : data.slice(0, 5);
+  
 
-    tableBody.innerHTML = rows.map(entry => `
-      <tr class="border-t dark:border-gray-700 group">
-        <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
-        <td class="px-4 py-2">${entry.source}</td>
-        <td class="px-4 py-2 font-semibold ${entry.type === "revenue" ? "text-green-500" : "text-blue-500"}">
-          $${entry.amount.toFixed(2)}
-        </td>
-        <td class="px-4 py-2">${entry.category}</td>
-        <td class="px-4 py-2">${entry.paymentMethod}</td>
-        <td class="px-4 py-2 relative">
-          <div class="max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
-            ${entry.notes.length > 30 ? entry.notes.slice(0, 30) + "..." : entry.notes}
+let profitAllEntries = [];
+let profitShowingAll = false;
+let profitCurrentSort = { field: "date", asc: false };
+
+// TABLE: Render table rows
+function renderProfitTable(data) {
+  const tableBody = document.getElementById("profit-table-body");
+  const rows = profitShowingAll ? data : data.slice(0, 5);
+
+  tableBody.innerHTML = rows.map(entry => `
+    <tr class="border-t dark:border-gray-700 group">
+      <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
+      <td class="px-4 py-2">${entry.source}</td>
+      <td class="px-4 py-2 font-semibold ${entry.type === "revenue" ? "text-green-500" : "text-blue-500"}">
+        $${entry.amount.toFixed(2)}
+      </td>
+      <td class="px-4 py-2">${entry.category}</td>
+      <td class="px-4 py-2">${entry.paymentMethod}</td>
+      <td class="px-4 py-2 relative">
+        <div class="max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
+          ${entry.notes.length > 30 ? entry.notes.slice(0, 30) + "..." : entry.notes}
+        </div>
+        ${entry.notes.length > 30 ? `
+          <div class="absolute z-20 mt-2 hidden group-hover:flex flex-col bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-sm w-64">
+            <span class="font-semibold text-gray-700 dark:text-gray-300 mb-1">Full Note</span>
+            <span class="text-black dark:text-white">${entry.notes}</span>
           </div>
-          ${entry.notes.length > 30 ? `
-            <div class="absolute z-20 mt-2 hidden group-hover:flex flex-col bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-sm w-64">
-              <span class="font-semibold text-gray-700 dark:text-gray-300 mb-1">Full Note</span>
-              <span class="text-black dark:text-white">${entry.notes}</span>
-            </div>
-          ` : ""}
-        </td>
-        <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
-      </tr>
-    `).join("");
+        ` : ""}
+      </td>
+      <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
+    </tr>
+  `).join("");
 
-    showAllBtn.textContent = showingAll ? "Collapse" : "Show All";
+  document.getElementById("toggle-profit-table").textContent = profitShowingAll ? "Collapse" : "Show All";
+}
+
+// FILTERS: Apply filters + sort
+function applyProfitFiltersAndRender() {
+  const category = document.getElementById("filter-category").value;
+  const payment = document.getElementById("filter-payment").value;
+  const start = document.getElementById("filter-start-date").value;
+  const end = document.getElementById("filter-end-date").value;
+  const search = document.getElementById("filter-search").value.toLowerCase();
+  const recurring = document.getElementById("filter-recurring").checked;
+
+  let filtered = [...profitAllEntries];
+
+  if (category) filtered = filtered.filter(e => e.category === category);
+  if (payment) filtered = filtered.filter(e => e.paymentMethod === payment);
+  if (start) filtered = filtered.filter(e => new Date(e.date) >= new Date(start));
+  if (end) filtered = filtered.filter(e => new Date(e.date) <= new Date(end));
+  if (search) {
+    filtered = filtered.filter(e =>
+      e.source.toLowerCase().includes(search) ||
+      e.notes.toLowerCase().includes(search)
+    );
+  }
+  if (recurring) {
+    filtered = filtered.filter(e => e.isRecurring || e.frequency);
   }
 
-  // Sort dropdown listeners
-  document.querySelectorAll(".sort-option").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const field = btn.dataset.sort;
-      const dir = btn.dataset.dir;
-      currentSort = { field, asc: dir === "asc" };
-      applyFiltersAndRender();
-    });
+  filtered.sort((a, b) => {
+    const valA = a[profitCurrentSort.field];
+    const valB = b[profitCurrentSort.field];
+    if (valA < valB) return profitCurrentSort.asc ? -1 : 1;
+    if (valA > valB) return profitCurrentSort.asc ? 1 : -1;
+    return 0;
   });
 
-  // Filter listeners
-  [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el =>
-    el.addEventListener("input", applyFiltersAndRender)
-  );
-  filterRecurring.addEventListener("input", applyFiltersAndRender);
+  renderProfitTable(filtered);
+}
 
-  // Fetch entries
+// LOAD: Get revenue + expense data from Firebase
+function loadProfitEntries() {
+  const db = firebase.firestore();
+
   Promise.all([
     db.collection("revenue").where("uid", "==", firebase.auth().currentUser.uid).get(),
     db.collection("expenses").where("uid", "==", firebase.auth().currentUser.uid).get()
@@ -321,18 +352,42 @@ function loadProfitEntries() {
       };
     });
 
-    allEntries = [...revenueEntries, ...expenseEntries];
+    profitAllEntries = [...revenueEntries, ...expenseEntries];
 
-    // Populate filters
-    const cats = [...new Set(allEntries.map(e => e.category))];
-    const pays = [...new Set(allEntries.map(e => e.paymentMethod))];
-    filterCategory.innerHTML += cats.map(c => `<option value="${c}">${c}</option>`).join("");
-    filterPayment.innerHTML += pays.map(p => `<option value="${p}">${p}</option>`).join("");
+    const cats = [...new Set(profitAllEntries.map(e => e.category))];
+    const pays = [...new Set(profitAllEntries.map(e => e.paymentMethod))];
+    document.getElementById("filter-category").innerHTML += cats.map(c => `<option value="${c}">${c}</option>`).join("");
+    document.getElementById("filter-payment").innerHTML += pays.map(p => `<option value="${p}">${p}</option>`).join("");
 
-    applyFiltersAndRender();
+    applyProfitFiltersAndRender();
   });
 }
 
+// EVENT LISTENERS
+document.getElementById("toggle-profit-table").addEventListener("click", () => {
+  profitShowingAll = !profitShowingAll;
+  applyProfitFiltersAndRender();
+});
+
+document.querySelectorAll(".sort-option").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const field = btn.dataset.sort;
+    const dir = btn.dataset.dir;
+    profitCurrentSort = { field, asc: dir === "asc" };
+    applyProfitFiltersAndRender();
+  });
+});
+
+["filter-category", "filter-payment", "filter-start-date", "filter-end-date", "filter-search", "filter-recurring"].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("input", applyProfitFiltersAndRender);
+});
+
+document.getElementById("toggle-filters").addEventListener("click", () => {
+  const wrapper = document.getElementById("profit-filters");
+  wrapper.classList.toggle("hidden");
+  document.getElementById("toggle-filters").textContent = wrapper.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
+});
 
 
 
