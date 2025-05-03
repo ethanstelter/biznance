@@ -244,6 +244,15 @@ firebase.auth().onAuthStateChanged(user => {
       return 0;
     });
 
+    document.querySelectorAll(".sort-option").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const field = btn.dataset.sort;
+    const dir = btn.dataset.dir;
+    profitCurrentSort = { field, asc: dir === "asc" };
+    applyProfitFiltersAndRender();
+  });
+});
+
     renderProfitTable(filtered);
   }
 
