@@ -180,7 +180,7 @@ function renderChart(entries, range, startDate = null, endDate = null) {
 }
 
 
-  function renderTable(data) {
+function loadProfitEntries() {
   const tableBody = document.getElementById("profit-table-body");
   const showAllBtn = document.getElementById("toggle-profit-table");
   const filterToggleBtn = document.getElementById("toggle-filters");
@@ -193,60 +193,146 @@ function renderChart(entries, range, startDate = null, endDate = null) {
   const filterSearch = document.getElementById("filter-search");
   const filterRecurring = document.getElementById("filter-recurring");
 
-  // Filter logic
-  let filtered = [...data];
+  let allEntries = [];
+  let showingAll = false;
+  let currentSort = { field: "date", asc: false };
 
-  if (filterCategory?.value) filtered = filtered.filter(e => e.category === filterCategory.value);
-  if (filterPayment?.value) filtered = filtered.filter(e => e.paymentMethod === filterPayment.value);
+  // Filter toggle
+  filterToggleBtn.addEventListener("click", () => {
+    filtersWrapper.classList.toggle("hidden");
+    filterToggleBtn.textContent = filtersWrapper.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
+  });
 
-  const start = filterStart?.value ? new Date(filterStart.value) : null;
-  const end = filterEnd?.value ? new Date(filterEnd.value) : null;
-  if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
-  if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
+  // Show more toggle
+  showAllBtn.addEventListener("click", () => {
+    showingAll = !showingAll;
+    applyFiltersAndRender();
+  });
 
-  const search = filterSearch?.value.toLowerCase();
-  if (search) {
-    filtered = filtered.filter(e =>
-      e.source.toLowerCase().includes(search) ||
-      e.notes.toLowerCase().includes(search)
-    );
+  function applyFiltersAndRender() {
+    let filtered = [...allEntries];
+
+    if (filterCategory.value) filtered = filtered.filter(e => e.category === filterCategory.value);
+    if (filterPayment.value) filtered = filtered.filter(e => e.paymentMethod === filterPayment.value);
+
+    const start = filterStart.value ? new Date(filterStart.value) : null;
+    const end = filterEnd.value ? new Date(filterEnd.value) : null;
+    if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
+    if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
+
+    const search = filterSearch.value.toLowerCase();
+    if (search) {
+      filtered = filtered.filter(e =>
+        e.source.toLowerCase().includes(search) ||
+        e.notes.toLowerCase().includes(search)
+      );
+    }
+
+    if (filterRecurring.checked) {
+      filtered = filtered.filter(e => e.isRecurring || e.frequency);
+    }
+
+    // Sorting
+    filtered.sort((a, b) => {
+      const valA = a[currentSort.field];
+      const valB = b[currentSort.field];
+      if (valA < valB) return currentSort.asc ? -1 : 1;
+      if (valA > valB) return currentSort.asc ? 1 : -1;
+      return 0;
+    });
+
+    renderTable(filtered);
   }
 
-  if (filterRecurring?.checked) {
-    filtered = filtered.filter(e => e.isRecurring === true || e.frequency);
-  }
+  function renderTable(data) {
+    const rows = showingAll ? data : data.slice(0, 5);
 
-  const rows = showingAll ? filtered : filtered.slice(0, 5);
-
-  tableBody.innerHTML = rows.map(entry => `
-    <tr class="border-t dark:border-gray-700 group">
-      <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
-      <td class="px-4 py-2">
-        <span class="font-semibold ${entry.type === 'revenue' ? 'text-green-500' : 'text-blue-500'}">
-          ${entry.type.charAt(0).toUpperCase() + entry.type.slice(1)}
-        </span>
-      </td>
-      <td class="px-4 py-2">${entry.source}</td>
-      <td class="px-4 py-2">$${entry.amount.toFixed(2)}</td>
-      <td class="px-4 py-2">${entry.category}</td>
-      <td class="px-4 py-2">${entry.paymentMethod}</td>
-      <td class="px-4 py-2 relative">
-        <div class="max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
-          ${entry.notes.length > 30 ? entry.notes.slice(0, 30) + "..." : entry.notes}
-        </div>
-        ${entry.notes.length > 30 ? `
-          <div class="absolute z-20 mt-2 hidden group-hover:flex flex-col bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-sm w-64">
-            <span class="font-semibold text-gray-700 dark:text-gray-300 mb-1">Full Note</span>
-            <span class="text-black dark:text-white">${entry.notes}</span>
+    tableBody.innerHTML = rows.map(entry => `
+      <tr class="border-t dark:border-gray-700 group">
+        <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
+        <td class="px-4 py-2">${entry.source}</td>
+        <td class="px-4 py-2 font-semibold ${entry.type === "revenue" ? "text-green-500" : "text-blue-500"}">
+          $${entry.amount.toFixed(2)}
+        </td>
+        <td class="px-4 py-2">${entry.category}</td>
+        <td class="px-4 py-2">${entry.paymentMethod}</td>
+        <td class="px-4 py-2 relative">
+          <div class="max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
+            ${entry.notes.length > 30 ? entry.notes.slice(0, 30) + "..." : entry.notes}
           </div>
-        ` : ""}
-      </td>
-      <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
-    </tr>
-  `).join("");
+          ${entry.notes.length > 30 ? `
+            <div class="absolute z-20 mt-2 hidden group-hover:flex flex-col bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-sm w-64">
+              <span class="font-semibold text-gray-700 dark:text-gray-300 mb-1">Full Note</span>
+              <span class="text-black dark:text-white">${entry.notes}</span>
+            </div>
+          ` : ""}
+        </td>
+        <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
+      </tr>
+    `).join("");
 
-  showAllBtn.textContent = showingAll ? "Collapse" : "Show All";
+    showAllBtn.textContent = showingAll ? "Collapse" : "Show All";
+  }
+
+  // Sort dropdown listeners
+  document.querySelectorAll(".sort-option").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const field = btn.dataset.sort;
+      const dir = btn.dataset.dir;
+      currentSort = { field, asc: dir === "asc" };
+      applyFiltersAndRender();
+    });
+  });
+
+  // Filter listeners
+  [filterCategory, filterPayment, filterStart, filterEnd, filterSearch].forEach(el =>
+    el.addEventListener("input", applyFiltersAndRender)
+  );
+  filterRecurring.addEventListener("input", applyFiltersAndRender);
+
+  // Fetch entries
+  Promise.all([
+    db.collection("revenue").where("uid", "==", firebase.auth().currentUser.uid).get(),
+    db.collection("expenses").where("uid", "==", firebase.auth().currentUser.uid).get()
+  ]).then(([revenueSnap, expenseSnap]) => {
+    const revenueEntries = revenueSnap.docs.map(doc => {
+      const d = doc.data();
+      return {
+        ...d,
+        type: "revenue",
+        id: doc.id,
+        date: d.date?.toDate?.() || new Date(0),
+        amount: parseFloat(d.amount),
+        notes: d.notes || "",
+        frequency: d.frequency || ""
+      };
+    });
+
+    const expenseEntries = expenseSnap.docs.map(doc => {
+      const d = doc.data();
+      return {
+        ...d,
+        type: "expense",
+        id: doc.id,
+        date: d.date?.toDate?.() || new Date(0),
+        amount: parseFloat(d.amount),
+        notes: d.notes || "",
+        frequency: d.frequency || ""
+      };
+    });
+
+    allEntries = [...revenueEntries, ...expenseEntries];
+
+    // Populate filters
+    const cats = [...new Set(allEntries.map(e => e.category))];
+    const pays = [...new Set(allEntries.map(e => e.paymentMethod))];
+    filterCategory.innerHTML += cats.map(c => `<option value="${c}">${c}</option>`).join("");
+    filterPayment.innerHTML += pays.map(p => `<option value="${p}">${p}</option>`).join("");
+
+    applyFiltersAndRender();
+  });
 }
+
 
 
 
@@ -309,3 +395,6 @@ summaryEnd.addEventListener('input', () => updateSummary(allEntries));
 
   fetchDataAndRender();
 });
+
+loadProfitEntries();
+
