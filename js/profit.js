@@ -137,46 +137,51 @@ function updateSummary(entries) {
       labels[key][e.type] += e.amount;
     });
 
-    const sortedKeys = Object.keys(labels).sort();
-    const labelList = sortedKeys;
-    const revenueList = sortedKeys.map(k => labels[k].revenue);
-    const expenseList = sortedKeys.map(k => labels[k].expense);
+   const labelList = sortedKeys;
+const revenueList = sortedKeys.map(k => labels[k].revenue);
+const expenseList = sortedKeys.map(k => labels[k].expense);
 
-    if (profitChart) profitChart.destroy();
+if (profitChart) profitChart.destroy();
 
-    profitChart = new Chart(chartCtx, {
-      type: 'line',
-      data: {
-        labels: labelList,
-        datasets: [
-          {
-            label: 'Revenue',
-            data: revenueList,
-            borderColor: '#22DD86',
-            backgroundColor: 'rgba(34, 221, 134, 0.2)',
-            fill: true,
-            tension: 0.3
-          },
-          {
-            label: 'Expenses',
-            data: expenseList,
-            borderColor: '#3B82F6',
-            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-            fill: true,
-            tension: 0.3
-          }
-        ]
+const groupBy = ['today', 'week', 'month'].includes(range) ? 'day' : 'month';
+
+profitChart = new Chart(chartCtx, {
+  type: 'line',
+  data: {
+    labels: labelList,
+    datasets: [
+      {
+        label: 'Revenue',
+        data: revenueList,
+        borderColor: '#22DD86',
+        backgroundColor: 'rgba(34, 221, 134, 0.2)',
+        fill: true,
+        tension: 0.3
       },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: 'top' } },
-        scales: {
-          y: { beginAtZero: true },
-          x: { title: { display: true, text: groupBy === 'day' ? 'Day' : 'Month' } }
+      {
+        label: 'Expenses',
+        data: expenseList,
+        borderColor: '#3B82F6',
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        fill: true,
+        tension: 0.3
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: { beginAtZero: true },
+      x: {
+        title: {
+          display: true,
+          text: groupBy === 'day' ? 'Day' : 'Month'
         }
       }
-      });
-  } // <-- closes renderChart
+    }
+  }
+});
 
   function renderTable(data) {
     const tableBody = document.getElementById("profit-table-body");
