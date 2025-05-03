@@ -39,6 +39,8 @@ firebase.auth().onAuthStateChanged(user => {
 
 function updateSummary(entries) {
   const range = document.getElementById('profitSummaryRange')?.value || 'all';
+  const startInput = document.getElementById('profitSummaryStart');
+  const endInput = document.getElementById('profitSummaryEnd');
 
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -47,17 +49,31 @@ function updateSummary(entries) {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-  let start;
+  let start = null;
+  let end = null;
 
   switch (range) {
-    case 'today': start = startOfDay; break;
-    case 'week': start = startOfWeek; break;
-    case 'month': start = startOfMonth; break;
-    case 'year': start = startOfYear; break;
-    default: start = null;
+    case 'today':
+      start = startOfDay;
+      break;
+    case 'week':
+      start = startOfWeek;
+      break;
+    case 'month':
+      start = startOfMonth;
+      break;
+    case 'year':
+      start = startOfYear;
+      break;
+    case 'custom':
+      start = startInput.value ? new Date(startInput.value) : null;
+      end = endInput.value ? new Date(endInput.value) : null;
+      break;
   }
 
-  const filtered = start ? entries.filter(e => new Date(e.date) >= start) : entries;
+  let filtered = [...entries];
+  if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
+  if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
 
   const revenueTotal = filtered.filter(e => e.type === "revenue").reduce((sum, e) => sum + e.amount, 0);
   const expenseTotal = filtered.filter(e => e.type === "expense").reduce((sum, e) => sum + e.amount, 0);
@@ -67,6 +83,7 @@ function updateSummary(entries) {
   document.getElementById("profit-total-expenses").textContent = `$${expenseTotal.toFixed(2)}`;
   document.getElementById("profit-net").textContent = `$${netProfit.toFixed(2)}`;
 }
+
 
   function renderChart(entries, range) {
     const now = new Date();
@@ -177,6 +194,31 @@ function updateSummary(entries) {
   document.getElementById('profitSummaryRange').addEventListener('change', () => {
   updateSummary(allEntries);
 });
+
+  document.getElementById('toggle-profit-table').addEventListener('click', () => {
+  showingAll = !showingAll;
+  renderTable(allEntries);
+});
+
+document.getElementById('profitChartRange').addEventListener('change', e => {
+  const range = e.target.value;
+  renderChart(allEntries, range);
+});
+
+// ✅ Add this block next:
+const summaryRange = document.getElementById('profitSummaryRange');
+const summaryStart = document.getElementById('profitSummaryStart');
+const summaryEnd = document.getElementById('profitSummaryEnd');
+
+summaryRange.addEventListener('change', () => {
+  const isCustom = summaryRange.value === 'custom';
+  summaryStart.classList.toggle('hidden', !isCustom);
+  summaryEnd.classList.toggle('hidden', !isCustom);
+  updateSummary(allEntries);
+});
+
+summaryStart.addEventListener('input', () => updateSummary(allEntries));
+summaryEnd.addEventListener('input', () => updateSummary(allEntries));
 
   fetchDataAndRender();
 });
