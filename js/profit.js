@@ -9,11 +9,10 @@ firebase.auth().onAuthStateChanged(user => {
   const db = firebase.firestore();
   const chartCtx = document.getElementById("profitTrendChart").getContext("2d");
   let profitChart;
-  let allEntries = [];
-  let showingAll = false;
-  let currentSort = { field: "date", asc: false };
+  let profitAllEntries = [];
+  let profitShowingAll = false;
+  let profitCurrentSort = { field: "date", asc: false };
 
-  // Fetch and merge revenue + expense entries
   function fetchDataAndRender(range = 'all') {
     Promise.all([
       db.collection("revenue").where("uid", "==", user.uid).get(),
@@ -33,10 +32,10 @@ firebase.auth().onAuthStateChanged(user => {
         source: e.source || ""
       }));
 
-      allEntries = merged;
+      profitAllEntries = merged;
       updateSummary(merged);
-      renderChart(merged, document.getElementById("profitChartRange").value);
-      applyFiltersAndRender();
+      renderChart(merged, range);
+      applyProfitFiltersAndRender();
     });
   }
 
@@ -164,46 +163,14 @@ firebase.auth().onAuthStateChanged(user => {
     });
   }
 
-  // Spreadsheet logic
-  const showAllBtn = document.getElementById("toggle-profit-table");
-  const filterToggleBtn = document.getElementById("toggle-filters");
-  const filtersWrapper = document.getElementById("profit-filters");
-
-  function applyFiltersAndRender() {
-    let filtered = [...allEntries];
-    const category = document.getElementById("filter-category").value;
-    const payment = document.getElementById("filter-payment").value;
-    const start = document.getElementById("filter-start-date").value;
-    const end = document.getElementById("filter-end-date").value;
-    const search = document.getElementById("filter-search").value.toLowerCase();
-    const recurring = document.getElementById("filter-recurring").checked;
-
-    if (category) filtered = filtered.filter(e => e.category === category);
-    if (payment) filtered = filtered.filter(e => e.paymentMethod === payment);
-    if (start) filtered = filtered.filter(e => new Date(e.date) >= new Date(start));
-    if (end) filtered = filtered.filter(e => new Date(e.date) <= new Date(end));
-    if (search) filtered = filtered.filter(e => e.source.toLowerCase().includes(search) || e.notes.toLowerCase().includes(search));
-    if (recurring) filtered = filtered.filter(e => e.isRecurring || e.frequency);
-
-    filtered.sort((a, b) => {
-      const valA = a[currentSort.field];
-      const valB = b[currentSort.field];
-      if (valA < valB) return currentSort.asc ? -1 : 1;
-      if (valA > valB) return currentSort.asc ? 1 : -1;
-      return 0;
-    });
-
-    renderTable(filtered);
-  }
-
-  function renderTable(data) {
+  function renderProfitTable(data) {
     const tableBody = document.getElementById("profit-table-body");
-    const rows = showingAll ? data : data.slice(0, 5);
+    const rows = profitShowingAll ? data : data.slice(0, 5);
 
     tableBody.innerHTML = rows.map(entry => `
       <tr class="border-t dark:border-gray-700 group">
         <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
-        <td class="px-4 py-2 font-semibold ${entry.type === 'revenue' ? 'text-green-500' : 'text-blue-500'}">
+        <td class="px-4 py-2 font-semibold ${entry.type === "revenue" ? "text-green-500" : "text-blue-500"}">
           ${entry.type.charAt(0).toUpperCase() + entry.type.slice(1)}
         </td>
         <td class="px-4 py-2">${entry.source}</td>
@@ -225,32 +192,60 @@ firebase.auth().onAuthStateChanged(user => {
       </tr>
     `).join("");
 
-    showAllBtn.textContent = showingAll ? "Collapse" : "Show All";
+    document.getElementById("toggle-profit-table").textContent = profitShowingAll ? "Collapse" : "Show All";
   }
 
-  showAllBtn.addEventListener("click", () => {
-    showingAll = !showingAll;
-    applyFiltersAndRender();
+  document.getElementById("toggle-profit-table").addEventListener("click", () => {
+    profitShowingAll = !profitShowingAll;
+    renderProfitTable(profitAllEntries);
   });
 
-  filterToggleBtn.addEventListener("click", () => {
-    filtersWrapper.classList.toggle("hidden");
-    filterToggleBtn.textContent = filtersWrapper.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
+  ["filter-category", "filter-payment", "filter-start-date", "filter-end-date", "filter-search", "filter-recurring"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("input", applyProfitFiltersAndRender);
   });
 
   document.querySelectorAll(".sort-option").forEach(btn => {
     btn.addEventListener("click", () => {
       const field = btn.dataset.sort;
       const dir = btn.dataset.dir;
-      currentSort = { field, asc: dir === "asc" };
-      applyFiltersAndRender();
+      profitCurrentSort = { field, asc: dir === "asc" };
+      applyProfitFiltersAndRender();
     });
   });
 
-  ["filter-category", "filter-payment", "filter-start-date", "filter-end-date", "filter-search", "filter-recurring"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener("input", applyFiltersAndRender);
-  });
+  function applyProfitFiltersAndRender() {
+    const category = document.getElementById("filter-category").value;
+    const payment = document.getElementById("filter-payment").value;
+    const start = document.getElementById("filter-start-date").value;
+    const end = document.getElementById("filter-end-date").value;
+    const search = document.getElementById("filter-search").value.toLowerCase();
+    const recurring = document.getElementById("filter-recurring").checked;
+
+    let filtered = [...profitAllEntries];
+
+    if (category) filtered = filtered.filter(e => e.category === category);
+    if (payment) filtered = filtered.filter(e => e.paymentMethod === payment);
+    if (start) filtered = filtered.filter(e => new Date(e.date) >= new Date(start));
+    if (end) filtered = filtered.filter(e => new Date(e.date) <= new Date(end));
+    if (search) {
+      filtered = filtered.filter(e =>
+        e.source.toLowerCase().includes(search) ||
+        e.notes.toLowerCase().includes(search)
+      );
+    }
+    if (recurring) filtered = filtered.filter(e => e.isRecurring || e.frequency);
+
+    filtered.sort((a, b) => {
+      const valA = a[profitCurrentSort.field];
+      const valB = b[profitCurrentSort.field];
+      if (valA < valB) return profitCurrentSort.asc ? -1 : 1;
+      if (valA > valB) return profitCurrentSort.asc ? 1 : -1;
+      return 0;
+    });
+
+    renderProfitTable(filtered);
+  }
 
   const chartRange = document.getElementById('profitChartRange');
   const chartStart = document.getElementById('profitChartStart');
@@ -259,13 +254,17 @@ firebase.auth().onAuthStateChanged(user => {
     const isCustom = chartRange.value === 'custom';
     chartStart.classList.toggle('hidden', !isCustom);
     chartEnd.classList.toggle('hidden', !isCustom);
-    renderChart(allEntries, chartRange.value, chartStart.value, chartEnd.value);
+    renderChart(profitAllEntries, chartRange.value, chartStart.value, chartEnd.value);
   });
   chartStart.addEventListener('input', () => {
-    if (chartRange.value === 'custom') renderChart(allEntries, chartRange.value, chartStart.value, chartEnd.value);
+    if (chartRange.value === 'custom') {
+      renderChart(profitAllEntries, chartRange.value, chartStart.value, chartEnd.value);
+    }
   });
   chartEnd.addEventListener('input', () => {
-    if (chartRange.value === 'custom') renderChart(allEntries, chartRange.value, chartStart.value, chartEnd.value);
+    if (chartRange.value === 'custom') {
+      renderChart(profitAllEntries, chartRange.value, chartStart.value, chartEnd.value);
+    }
   });
 
   const summaryRange = document.getElementById('profitSummaryRange');
@@ -275,11 +274,10 @@ firebase.auth().onAuthStateChanged(user => {
     const isCustom = summaryRange.value === 'custom';
     summaryStart.classList.toggle('hidden', !isCustom);
     summaryEnd.classList.toggle('hidden', !isCustom);
-    updateSummary(allEntries);
+    updateSummary(profitAllEntries);
   });
-  summaryStart.addEventListener('input', () => updateSummary(allEntries));
-  summaryEnd.addEventListener('input', () => updateSummary(allEntries));
+  summaryStart.addEventListener('input', () => updateSummary(profitAllEntries));
+  summaryEnd.addEventListener('input', () => updateSummary(profitAllEntries));
 
-  // Kick off
   fetchDataAndRender();
 });
