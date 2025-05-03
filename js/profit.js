@@ -85,7 +85,7 @@ function updateSummary(entries) {
 }
 
 
-  function renderChart(entries, range) {
+  function renderChart(entries, range, startDate = null, endDate = null) {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfWeek = new Date(startOfDay);
@@ -93,14 +93,31 @@ function updateSummary(entries) {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    let start;
-    switch (range) {
-      case 'today': start = startOfDay; break;
-      case 'week': start = startOfWeek; break;
-      case 'month': start = startOfMonth; break;
-      case 'year': start = startOfYear; break;
-      default: start = null;
-    }
+   let start;
+const now = new Date();
+const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+const startOfWeek = new Date(startOfDay);
+startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+switch (range) {
+  case 'today': start = startOfDay; break;
+  case 'week': start = startOfWeek; break;
+  case 'month': start = startOfMonth; break;
+  case 'year': start = startOfYear; break;
+  case 'custom':
+    start = startDate ? new Date(startDate) : null;
+    endDate = endDate ? new Date(endDate) : null;
+    break;
+  default: start = null;
+}
+
+let filtered = [...entries];
+if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
+if (range === 'custom' && endDate) {
+  filtered = filtered.filter(e => new Date(e.date) <= endDate);
+}
 
     const filtered = start ? entries.filter(e => new Date(e.date) >= start) : entries;
 
@@ -200,9 +217,27 @@ function updateSummary(entries) {
   renderTable(allEntries);
 });
 
-document.getElementById('profitChartRange').addEventListener('change', e => {
-  const range = e.target.value;
-  renderChart(allEntries, range);
+const chartRange = document.getElementById('profitChartRange');
+const chartStart = document.getElementById('profitChartStart');
+const chartEnd = document.getElementById('profitChartEnd');
+
+chartRange.addEventListener('change', () => {
+  const isCustom = chartRange.value === 'custom';
+  chartStart.classList.toggle('hidden', !isCustom);
+  chartEnd.classList.toggle('hidden', !isCustom);
+  renderChart(allEntries, chartRange.value, chartStart.value, chartEnd.value);
+});
+
+chartStart.addEventListener('input', () => {
+  if (chartRange.value === 'custom') {
+    renderChart(allEntries, chartRange.value, chartStart.value, chartEnd.value);
+  }
+});
+
+chartEnd.addEventListener('input', () => {
+  if (chartRange.value === 'custom') {
+    renderChart(allEntries, chartRange.value, chartStart.value, chartEnd.value);
+  }
 });
 
 // ✅ Add this block next:
