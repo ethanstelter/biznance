@@ -59,12 +59,17 @@
     <div class="bg-white p-6 rounded-lg shadow">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-black">Profit Overview</h2>
-        <select id="profitChartRange" class="border border-gray-300 rounded px-2 py-1 text-sm">
-          <option value="all">All Time</option>
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
-          <option value="year">This Year</option>
+       <select id="profitChartRange" class="border border-gray-300 rounded px-2 py-1 text-sm">
+  <option value="all">All Time</option>
+  <option value="today">Today</option>
+  <option value="week">This Week</option>
+  <option value="month">This Month</option>
+  <option value="year">This Year</option>
+  <option value="custom">Custom Range</option>
+</select>
+
+<input type="date" id="profitChartStart" class="border border-gray-300 rounded px-2 py-1 text-sm hidden" />
+<input type="date" id="profitChartEnd" class="border border-gray-300 rounded px-2 py-1 text-sm hidden" />
         </select>
       </div>
       <canvas id="profitTrendChart" style="max-height: 300px;"></canvas>
