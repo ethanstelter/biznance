@@ -127,13 +127,16 @@
           <th class="px-4 py-2">
   Type
 </th>
-          <th class="px-4 py-2 relative group">
-  Source <span class="ml-1 cursor-pointer">&#x25BC;</span>
-  <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+<th class="px-4 py-2 relative">
+  <button class="peer text-left w-full flex items-center gap-1">
+    Source <span class="cursor-pointer">&#x25BC;</span>
+  </button>
+  <div class="absolute z-50 hidden peer-hover:block hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
     <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="asc">A → Z</button>
     <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="desc">Z → A</button>
   </div>
 </th>
+
 
           <th class="px-4 py-2 relative group">
             Amount <span class="ml-1 cursor-pointer">&#x25BC;</span>
