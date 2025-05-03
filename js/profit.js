@@ -192,6 +192,15 @@ firebase.auth().onAuthStateChanged(user => {
       </tr>
     `).join("");
 
+    document.querySelectorAll(".sort-option").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const field = btn.dataset.sort;
+    const dir = btn.dataset.dir;
+    profitCurrentSort = { field, asc: dir === "asc" };
+    applyProfitFiltersAndRender();
+  });
+});
+
     document.getElementById("toggle-profit-table").textContent = profitShowingAll ? "Collapse" : "Show All";
   }
 
