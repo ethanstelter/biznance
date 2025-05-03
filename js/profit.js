@@ -174,8 +174,8 @@ function updateSummary(entries) {
           x: { title: { display: true, text: groupBy === 'day' ? 'Day' : 'Month' } }
         }
       }
-    });
-  }
+      });
+  } // <-- closes renderChart
 
   function renderTable(data) {
     const tableBody = document.getElementById("profit-table-body");
