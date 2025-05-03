@@ -75,7 +75,6 @@ function updateSummary(entries) {
   if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
   if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
  
-  const groupBy = ['today', 'week', 'month'].includes(range) ? 'day' : 'month';
   const revenueTotal = filtered.filter(e => e.type === "revenue").reduce((sum, e) => sum + e.amount, 0);
   const expenseTotal = filtered.filter(e => e.type === "expense").reduce((sum, e) => sum + e.amount, 0);
   const netProfit = revenueTotal - expenseTotal;
