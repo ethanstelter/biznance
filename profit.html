@@ -75,31 +75,97 @@
       <canvas id="profitTrendChart" style="max-height: 300px;"></canvas>
     </div>
 
-    <!-- Profit Table Placeholder -->
-    <div class="bg-white p-6 rounded-lg shadow">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold text-black">Profit Breakdown</h2>
-        <button id="toggle-profit-table" class="text-sm text-blue-500 hover:underline">Show All</button>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left">
-          <thead class="border-b">
-            <tr>
-              <th class="px-4 py-2">Date</th>
-              <th class="px-4 py-2">Type</th>
-              <th class="px-4 py-2">Source</th>
-              <th class="px-4 py-2">Amount</th>
-              <th class="px-4 py-2">Category</th>
-              <th class="px-4 py-2">Payment</th>
-              <th class="px-4 py-2">Notes</th>
-              <th class="px-4 py-2">Recurring</th>
-            </tr>
-          </thead>
-          <tbody id="profit-table-body"></tbody>
-        </table>
-      </div>
-    </div>
+    <!-- Profit Spreadsheet Section -->
+<section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6 w-full">
+  <div class="flex justify-between items-center">
+    <h2 class="text-2xl font-bold text-gray-700 dark:text-white text-center w-full">Profit Spreadsheet</h2>
   </div>
+
+  <!-- Filters Toggle -->
+  <div class="flex justify-start">
+    <button id="toggle-filters" class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-neutral-800 hover:bg-gray-300 dark:hover:bg-neutral-700 transition">
+      Show Filters
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div id="profit-filters" class="flex flex-wrap gap-4 mb-4 hidden">
+    <select id="filter-category" class="input w-40 text-gray-500">
+      <option value="">All Categories</option>
+    </select>
+    <select id="filter-payment" class="input w-40 text-gray-500">
+      <option value="">All Payment Methods</option>
+    </select>
+    <div class="flex flex-col">
+      <label for="filter-start-date" class="text-xs font-medium mb-1">Start Date</label>
+      <input type="date" id="filter-start-date" class="input w-40" />
+    </div>
+    <div class="flex flex-col">
+      <label for="filter-end-date" class="text-xs font-medium mb-1">End Date</label>
+      <input type="date" id="filter-end-date" class="input w-40" />
+    </div>
+    <input type="text" id="filter-search" class="input w-56" placeholder="Search by source or notes" />
+    <label class="flex items-center space-x-2 text-sm text-black dark:text-white">
+      <input type="checkbox" id="filter-recurring" class="form-checkbox" />
+      <span>Recurring Only</span>
+    </label>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left border dark:border-gray-700">
+      <thead class="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-white">
+        <tr>
+          <th class="px-4 py-2 relative group">
+            Date <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="asc">Oldest → Newest</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="desc">Newest → Oldest</button>
+            </div>
+          </th>
+          <th class="px-4 py-2 relative group">
+            Source <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="asc">A → Z</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="desc">Z → A</button>
+            </div>
+          </th>
+          <th class="px-4 py-2 relative group">
+            Amount <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="asc">Low → High</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="desc">High → Low</button>
+            </div>
+          </th>
+          <th class="px-4 py-2 relative group">
+            Category <span class="ml-1 cursor-pointer">&#x25BC;</span>
+            <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="asc">A → Z</button>
+              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="desc">Z → A</button>
+            </div>
+          </th>
+          <th class="px-4 py-2">Payment</th>
+          <th class="px-4 py-2">Notes</th>
+          <th class="px-4 py-2">Recurring</th>
+        </tr>
+      </thead>
+      <tbody id="profit-table-body" class="bg-white dark:bg-black text-black dark:text-white">
+        <!-- Populated by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Show More Button -->
+  <div class="mt-6">
+    <button
+      id="toggle-profit-table"
+      class="w-full bg-gray-700 text-white py-2 rounded font-semibold hover:bg-opacity-90 transition"
+    >
+      Show All
+    </button>
+  </div>
+</section>
+
 
   <script src="/js/profit.js"></script>
 </body>
