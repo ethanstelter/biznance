@@ -24,15 +24,20 @@
 <body class="bg-gray-100">
   <div class="max-w-4xl mx-auto px-4 space-y-6 py-6">
 
-    <div class="flex items-center justify-end">
+  <div class="flex flex-wrap gap-2 items-center justify-end mb-2">
   <select id="profitSummaryRange" class="border border-gray-300 rounded px-2 py-1 text-sm">
     <option value="all">All Time</option>
     <option value="today">Today</option>
     <option value="week">This Week</option>
     <option value="month">This Month</option>
     <option value="year">This Year</option>
+    <option value="custom">Custom Range</option>
   </select>
+
+  <input type="date" id="profitSummaryStart" class="border border-gray-300 rounded px-2 py-1 text-sm hidden" />
+  <input type="date" id="profitSummaryEnd" class="border border-gray-300 rounded px-2 py-1 text-sm hidden" />
 </div>
+
 
     <!-- Profit Summary -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
