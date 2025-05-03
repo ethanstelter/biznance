@@ -181,28 +181,73 @@ function renderChart(entries, range, startDate = null, endDate = null) {
 
 
   function renderTable(data) {
-    const tableBody = document.getElementById("profit-table-body");
-    const rows = showingAll ? data : data.slice(0, 5);
+  const tableBody = document.getElementById("profit-table-body");
+  const showAllBtn = document.getElementById("toggle-profit-table");
+  const filterToggleBtn = document.getElementById("toggle-filters");
+  const filtersWrapper = document.getElementById("profit-filters");
 
-    tableBody.innerHTML = rows.map(entry => `
-      <tr class="border-t group">
-        <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
-        <td class="px-4 py-2">
-          <span class="font-semibold ${entry.type === 'revenue' ? 'text-green-500' : 'text-blue-500'}">
-            ${entry.type.charAt(0).toUpperCase() + entry.type.slice(1)}
-          </span>
-        </td>
-        <td class="px-4 py-2">${entry.source}</td>
-        <td class="px-4 py-2">$${entry.amount.toFixed(2)}</td>
-        <td class="px-4 py-2">${entry.category}</td>
-        <td class="px-4 py-2">${entry.paymentMethod}</td>
-        <td class="px-4 py-2">${entry.notes}</td>
-        <td class="px-4 py-2">${entry.frequency || '—'}</td>
-      </tr>
-    `).join("");
+  const filterCategory = document.getElementById("filter-category");
+  const filterPayment = document.getElementById("filter-payment");
+  const filterStart = document.getElementById("filter-start-date");
+  const filterEnd = document.getElementById("filter-end-date");
+  const filterSearch = document.getElementById("filter-search");
+  const filterRecurring = document.getElementById("filter-recurring");
 
-    document.getElementById("toggle-profit-table").textContent = showingAll ? "Collapse" : "Show All";
+  // Filter logic
+  let filtered = [...data];
+
+  if (filterCategory?.value) filtered = filtered.filter(e => e.category === filterCategory.value);
+  if (filterPayment?.value) filtered = filtered.filter(e => e.paymentMethod === filterPayment.value);
+
+  const start = filterStart?.value ? new Date(filterStart.value) : null;
+  const end = filterEnd?.value ? new Date(filterEnd.value) : null;
+  if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
+  if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
+
+  const search = filterSearch?.value.toLowerCase();
+  if (search) {
+    filtered = filtered.filter(e =>
+      e.source.toLowerCase().includes(search) ||
+      e.notes.toLowerCase().includes(search)
+    );
   }
+
+  if (filterRecurring?.checked) {
+    filtered = filtered.filter(e => e.isRecurring === true || e.frequency);
+  }
+
+  const rows = showingAll ? filtered : filtered.slice(0, 5);
+
+  tableBody.innerHTML = rows.map(entry => `
+    <tr class="border-t dark:border-gray-700 group">
+      <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
+      <td class="px-4 py-2">
+        <span class="font-semibold ${entry.type === 'revenue' ? 'text-green-500' : 'text-blue-500'}">
+          ${entry.type.charAt(0).toUpperCase() + entry.type.slice(1)}
+        </span>
+      </td>
+      <td class="px-4 py-2">${entry.source}</td>
+      <td class="px-4 py-2">$${entry.amount.toFixed(2)}</td>
+      <td class="px-4 py-2">${entry.category}</td>
+      <td class="px-4 py-2">${entry.paymentMethod}</td>
+      <td class="px-4 py-2 relative">
+        <div class="max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
+          ${entry.notes.length > 30 ? entry.notes.slice(0, 30) + "..." : entry.notes}
+        </div>
+        ${entry.notes.length > 30 ? `
+          <div class="absolute z-20 mt-2 hidden group-hover:flex flex-col bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-sm w-64">
+            <span class="font-semibold text-gray-700 dark:text-gray-300 mb-1">Full Note</span>
+            <span class="text-black dark:text-white">${entry.notes}</span>
+          </div>
+        ` : ""}
+      </td>
+      <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
+    </tr>
+  `).join("");
+
+  showAllBtn.textContent = showingAll ? "Collapse" : "Show All";
+}
+
 
   document.getElementById("toggle-profit-table").addEventListener("click", () => {
     showingAll = !showingAll;
