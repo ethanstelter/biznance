@@ -192,15 +192,6 @@ firebase.auth().onAuthStateChanged(user => {
       </tr>
     `).join("");
 
-    document.querySelectorAll(".sort-option").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const field = btn.dataset.sort;
-    const dir = btn.dataset.dir;
-    profitCurrentSort = { field, asc: dir === "asc" };
-    applyProfitFiltersAndRender();
-  });
-});
-
     document.getElementById("toggle-profit-table").textContent = profitShowingAll ? "Collapse" : "Show All";
   }
 
@@ -212,15 +203,6 @@ firebase.auth().onAuthStateChanged(user => {
   ["filter-category", "filter-payment", "filter-start-date", "filter-end-date", "filter-search", "filter-recurring"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("input", applyProfitFiltersAndRender);
-  });
-
-  document.querySelectorAll(".sort-option").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const field = btn.dataset.sort;
-      const dir = btn.dataset.dir;
-      profitCurrentSort = { field, asc: dir === "asc" };
-      applyProfitFiltersAndRender();
-    });
   });
 
   function applyProfitFiltersAndRender() {
@@ -253,14 +235,6 @@ firebase.auth().onAuthStateChanged(user => {
       return 0;
     });
 
-    document.querySelectorAll(".sort-option").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const field = btn.dataset.sort;
-    const dir = btn.dataset.dir;
-    profitCurrentSort = { field, asc: dir === "asc" };
-    applyProfitFiltersAndRender();
-  });
-});
 
     renderProfitTable(filtered);
   }
@@ -304,16 +278,15 @@ firebase.auth().onAuthStateChanged(user => {
   summaryStart.addEventListener('input', () => updateSummary(profitAllEntries));
   summaryEnd.addEventListener('input', () => updateSummary(profitAllEntries));
 
-setTimeout(() => {
-  document.querySelectorAll(".sort-option").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const field = btn.dataset.sort;
-      const dir = btn.dataset.dir;
-      profitCurrentSort = { field, asc: dir === "asc" };
-      applyProfitFiltersAndRender();
-    });
+// ✅ Add this RIGHT BEFORE the closing bracket/paren
+document.querySelectorAll(".sort-option").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const field = btn.dataset.sort;
+    const dir = btn.dataset.dir;
+    profitCurrentSort = { field, asc: dir === "asc" };
+    applyProfitFiltersAndRender();
   });
-}, 0);
-  
-  fetchDataAndRender();
+});
+
+fetchDataAndRender();
 });
