@@ -10,7 +10,10 @@ firebase.auth().onAuthStateChanged(user => {
   const chartCtx = document.getElementById("profitTrendChart").getContext("2d");
   let profitChart;
   let allEntries = [];
+  let profitAllEntries = [];
   let showingAll = false;
+  let profitShowingAll = false;
+  let profitCurrentSort = { field: "date", asc: false };
 
   function fetchDataAndRender(range = 'all') {
     Promise.all([
@@ -31,369 +34,163 @@ firebase.auth().onAuthStateChanged(user => {
       }));
 
       allEntries = merged;
+      profitAllEntries = merged;
+
       updateSummary(merged);
       renderChart(merged, range);
-      renderTable(merged);
+      applyProfitFiltersAndRender();
     });
   }
 
-function updateSummary(entries) {
-  const range = document.getElementById('profitSummaryRange')?.value || 'all';
-  const startInput = document.getElementById('profitSummaryStart');
-  const endInput = document.getElementById('profitSummaryEnd');
+  function updateSummary(entries) {
+    const range = document.getElementById('profitSummaryRange')?.value || 'all';
+    const startInput = document.getElementById('profitSummaryStart');
+    const endInput = document.getElementById('profitSummaryEnd');
 
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfWeek = new Date(startOfDay);
-  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(startOfDay);
+    startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-  let start = null;
-  let end = null;
+    let start = null;
+    let end = null;
 
-  switch (range) {
-    case 'today':
-      start = startOfDay;
-      break;
-    case 'week':
-      start = startOfWeek;
-      break;
-    case 'month':
-      start = startOfMonth;
-      break;
-    case 'year':
-      start = startOfYear;
-      break;
-    case 'custom':
-      start = startInput.value ? new Date(startInput.value) : null;
-      end = endInput.value ? new Date(endInput.value) : null;
-      break;
-  }
-
-  let filtered = [...entries];
-  if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
-  if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
- 
-  const revenueTotal = filtered.filter(e => e.type === "revenue").reduce((sum, e) => sum + e.amount, 0);
-  const expenseTotal = filtered.filter(e => e.type === "expense").reduce((sum, e) => sum + e.amount, 0);
-  const netProfit = revenueTotal - expenseTotal;
-
-  document.getElementById("profit-total-revenue").textContent = `$${revenueTotal.toFixed(2)}`;
-  document.getElementById("profit-total-expenses").textContent = `$${expenseTotal.toFixed(2)}`;
-  document.getElementById("profit-net").textContent = `$${netProfit.toFixed(2)}`;
-}
-
-
-function renderChart(entries, range, startDate = null, endDate = null) {
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfWeek = new Date(startOfDay);
-  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-
-  let start = null;
-  let end = null;
-
-  switch (range) {
-    case 'today':
-      start = startOfDay;
-      break;
-    case 'week':
-      start = startOfWeek;
-      break;
-    case 'month':
-      start = startOfMonth;
-      break;
-    case 'year':
-      start = startOfYear;
-      break;
-    case 'custom':
-      start = startDate ? new Date(startDate) : null;
-      end = endDate ? new Date(endDate) : null;
-      break;
-    default:
-      start = null;
-  }
-
-  let filtered = [...entries];
-  if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
-  if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
-
-  const groupBy = ['today', 'week', 'month'].includes(range) ? 'day' : 'month';
-  const labels = {};
-
-  filtered.forEach(e => {
-    const d = new Date(e.date);
-    const key = groupBy === 'day'
-      ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-      : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    if (!labels[key]) labels[key] = { revenue: 0, expense: 0 };
-    labels[key][e.type] += e.amount;
-  });
-
-  const sortedKeys = Object.keys(labels).sort();
-  const labelList = sortedKeys;
-  const revenueList = sortedKeys.map(k => labels[k].revenue);
-  const expenseList = sortedKeys.map(k => labels[k].expense);
-
-  if (profitChart) profitChart.destroy();
-
-  profitChart = new Chart(chartCtx, {
-    type: 'line',
-    data: {
-      labels: labelList,
-      datasets: [
-        {
-          label: 'Revenue',
-          data: revenueList,
-          borderColor: '#22DD86',
-          backgroundColor: 'rgba(34, 221, 134, 0.2)',
-          fill: true,
-          tension: 0.3
-        },
-        {
-          label: 'Expenses',
-          data: expenseList,
-          borderColor: '#3B82F6',
-          backgroundColor: 'rgba(59, 130, 246, 0.2)',
-          fill: true,
-          tension: 0.3
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'top' } },
-      scales: {
-        y: { beginAtZero: true },
-        x: {
-          title: {
-            display: true,
-            text: groupBy === 'day' ? 'Day' : 'Month'
-          }
-        }
-      }
+    switch (range) {
+      case 'today': start = startOfDay; break;
+      case 'week': start = startOfWeek; break;
+      case 'month': start = startOfMonth; break;
+      case 'year': start = startOfYear; break;
+      case 'custom':
+        start = startInput.value ? new Date(startInput.value) : null;
+        end = endInput.value ? new Date(endInput.value) : null;
+        break;
     }
-  });
-}
 
-
-function loadProfitEntries() {
-  const tableBody = document.getElementById("profit-table-body");
-  const showAllBtn = document.getElementById("toggle-profit-table");
-  const filterToggleBtn = document.getElementById("toggle-filters");
-  const filtersWrapper = document.getElementById("profit-filters");
-
-  const filterCategory = document.getElementById("filter-category");
-  const filterPayment = document.getElementById("filter-payment");
-  const filterStart = document.getElementById("filter-start-date");
-  const filterEnd = document.getElementById("filter-end-date");
-  const filterSearch = document.getElementById("filter-search");
-  const filterRecurring = document.getElementById("filter-recurring");
-
-  let allEntries = [];
-  let showingAll = false;
-  let currentSort = { field: "date", asc: false };
-
-  // Filter toggle
-  filterToggleBtn.addEventListener("click", () => {
-    filtersWrapper.classList.toggle("hidden");
-    filterToggleBtn.textContent = filtersWrapper.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
-  });
-
-  // Show more toggle
-  showAllBtn.addEventListener("click", () => {
-    showingAll = !showingAll;
-    applyFiltersAndRender();
-  });
-
-  function applyFiltersAndRender() {
-    let filtered = [...allEntries];
-
-    if (filterCategory.value) filtered = filtered.filter(e => e.category === filterCategory.value);
-    if (filterPayment.value) filtered = filtered.filter(e => e.paymentMethod === filterPayment.value);
-
-    const start = filterStart.value ? new Date(filterStart.value) : null;
-    const end = filterEnd.value ? new Date(filterEnd.value) : null;
+    let filtered = [...entries];
     if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
     if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
 
-    const search = filterSearch.value.toLowerCase();
-    if (search) {
-      filtered = filtered.filter(e =>
-        e.source.toLowerCase().includes(search) ||
-        e.notes.toLowerCase().includes(search)
-      );
+    const revenueTotal = filtered.filter(e => e.type === "revenue").reduce((sum, e) => sum + e.amount, 0);
+    const expenseTotal = filtered.filter(e => e.type === "expense").reduce((sum, e) => sum + e.amount, 0);
+    const netProfit = revenueTotal - expenseTotal;
+
+    document.getElementById("profit-total-revenue").textContent = `$${revenueTotal.toFixed(2)}`;
+    document.getElementById("profit-total-expenses").textContent = `$${expenseTotal.toFixed(2)}`;
+    document.getElementById("profit-net").textContent = `$${netProfit.toFixed(2)}`;
+  }
+
+  function renderChart(entries, range, startDate = null, endDate = null) {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(startOfDay);
+    startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    let start = null;
+    let end = null;
+
+    switch (range) {
+      case 'today': start = startOfDay; break;
+      case 'week': start = startOfWeek; break;
+      case 'month': start = startOfMonth; break;
+      case 'year': start = startOfYear; break;
+      case 'custom':
+        start = startDate ? new Date(startDate) : null;
+        end = endDate ? new Date(endDate) : null;
+        break;
+      default: start = null;
     }
 
-    if (filterRecurring.checked) {
-      filtered = filtered.filter(e => e.isRecurring || e.frequency);
-    }
+    let filtered = [...entries];
+    if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
+    if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
 
-    // Sorting
-    filtered.sort((a, b) => {
-      const valA = a[currentSort.field];
-      const valB = b[currentSort.field];
-      if (valA < valB) return currentSort.asc ? -1 : 1;
-      if (valA > valB) return currentSort.asc ? 1 : -1;
-      return 0;
+    const groupBy = ['today', 'week', 'month'].includes(range) ? 'day' : 'month';
+    const labels = {};
+
+    filtered.forEach(e => {
+      const d = new Date(e.date);
+      const key = groupBy === 'day'
+        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!labels[key]) labels[key] = { revenue: 0, expense: 0 };
+      labels[key][e.type] += e.amount;
     });
 
-    renderTable(filtered);
-  }
+    const sortedKeys = Object.keys(labels).sort();
+    const labelList = sortedKeys;
+    const revenueList = sortedKeys.map(k => labels[k].revenue);
+    const expenseList = sortedKeys.map(k => labels[k].expense);
 
-  
+    if (profitChart) profitChart.destroy();
 
-let profitAllEntries = [];
-let profitShowingAll = false;
-let profitCurrentSort = { field: "date", asc: false };
-
-// TABLE: Render table rows
-function renderProfitTable(data) {
-  const tableBody = document.getElementById("profit-table-body");
-  const rows = profitShowingAll ? data : data.slice(0, 5);
-
-  tableBody.innerHTML = rows.map(entry => `
-    <tr class="border-t dark:border-gray-700 group">
-      <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
-      <td class="px-4 py-2">${entry.source}</td>
-      <td class="px-4 py-2 font-semibold ${entry.type === "revenue" ? "text-green-500" : "text-blue-500"}">
-        $${entry.amount.toFixed(2)}
-      </td>
-      <td class="px-4 py-2">${entry.category}</td>
-      <td class="px-4 py-2">${entry.paymentMethod}</td>
-      <td class="px-4 py-2 relative">
-        <div class="max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
-          ${entry.notes.length > 30 ? entry.notes.slice(0, 30) + "..." : entry.notes}
-        </div>
-        ${entry.notes.length > 30 ? `
-          <div class="absolute z-20 mt-2 hidden group-hover:flex flex-col bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-sm w-64">
-            <span class="font-semibold text-gray-700 dark:text-gray-300 mb-1">Full Note</span>
-            <span class="text-black dark:text-white">${entry.notes}</span>
-          </div>
-        ` : ""}
-      </td>
-      <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
-    </tr>
-  `).join("");
-
-  document.getElementById("toggle-profit-table").textContent = profitShowingAll ? "Collapse" : "Show All";
-}
-
-// FILTERS: Apply filters + sort
-function applyProfitFiltersAndRender() {
-  const category = document.getElementById("filter-category").value;
-  const payment = document.getElementById("filter-payment").value;
-  const start = document.getElementById("filter-start-date").value;
-  const end = document.getElementById("filter-end-date").value;
-  const search = document.getElementById("filter-search").value.toLowerCase();
-  const recurring = document.getElementById("filter-recurring").checked;
-
-  let filtered = [...profitAllEntries];
-
-  if (category) filtered = filtered.filter(e => e.category === category);
-  if (payment) filtered = filtered.filter(e => e.paymentMethod === payment);
-  if (start) filtered = filtered.filter(e => new Date(e.date) >= new Date(start));
-  if (end) filtered = filtered.filter(e => new Date(e.date) <= new Date(end));
-  if (search) {
-    filtered = filtered.filter(e =>
-      e.source.toLowerCase().includes(search) ||
-      e.notes.toLowerCase().includes(search)
-    );
-  }
-  if (recurring) {
-    filtered = filtered.filter(e => e.isRecurring || e.frequency);
-  }
-
-  filtered.sort((a, b) => {
-    const valA = a[profitCurrentSort.field];
-    const valB = b[profitCurrentSort.field];
-    if (valA < valB) return profitCurrentSort.asc ? -1 : 1;
-    if (valA > valB) return profitCurrentSort.asc ? 1 : -1;
-    return 0;
-  });
-
-  renderProfitTable(filtered);
-}
-
-// LOAD: Get revenue + expense data from Firebase
-function loadProfitEntries() {
-  const db = firebase.firestore();
-
-  Promise.all([
-    db.collection("revenue").where("uid", "==", firebase.auth().currentUser.uid).get(),
-    db.collection("expenses").where("uid", "==", firebase.auth().currentUser.uid).get()
-  ]).then(([revenueSnap, expenseSnap]) => {
-    const revenueEntries = revenueSnap.docs.map(doc => {
-      const d = doc.data();
-      return {
-        ...d,
-        type: "revenue",
-        id: doc.id,
-        date: d.date?.toDate?.() || new Date(0),
-        amount: parseFloat(d.amount),
-        notes: d.notes || "",
-        frequency: d.frequency || ""
-      };
+    profitChart = new Chart(chartCtx, {
+      type: 'line',
+      data: {
+        labels: labelList,
+        datasets: [
+          {
+            label: 'Revenue',
+            data: revenueList,
+            borderColor: '#22DD86',
+            backgroundColor: 'rgba(34, 221, 134, 0.2)',
+            fill: true,
+            tension: 0.3
+          },
+          {
+            label: 'Expenses',
+            data: expenseList,
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            fill: true,
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: {
+          y: { beginAtZero: true },
+          x: {
+            title: {
+              display: true,
+              text: groupBy === 'day' ? 'Day' : 'Month'
+            }
+          }
+        }
+      }
     });
+  }
 
-    const expenseEntries = expenseSnap.docs.map(doc => {
-      const d = doc.data();
-      return {
-        ...d,
-        type: "expense",
-        id: doc.id,
-        date: d.date?.toDate?.() || new Date(0),
-        amount: parseFloat(d.amount),
-        notes: d.notes || "",
-        frequency: d.frequency || ""
-      };
-    });
-
-    profitAllEntries = [...revenueEntries, ...expenseEntries];
-
-    const cats = [...new Set(profitAllEntries.map(e => e.category))];
-    const pays = [...new Set(profitAllEntries.map(e => e.paymentMethod))];
-    document.getElementById("filter-category").innerHTML += cats.map(c => `<option value="${c}">${c}</option>`).join("");
-    document.getElementById("filter-payment").innerHTML += pays.map(p => `<option value="${p}">${p}</option>`).join("");
-
-    applyProfitFiltersAndRender();
-  });
-}
-
-// EVENT LISTENERS
-document.getElementById("toggle-profit-table").addEventListener("click", () => {
-  profitShowingAll = !profitShowingAll;
-  applyProfitFiltersAndRender();
-});
-
-document.querySelectorAll(".sort-option").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const field = btn.dataset.sort;
-    const dir = btn.dataset.dir;
-    profitCurrentSort = { field, asc: dir === "asc" };
-    applyProfitFiltersAndRender();
-  });
-});
-
-["filter-category", "filter-payment", "filter-start-date", "filter-end-date", "filter-search", "filter-recurring"].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener("input", applyProfitFiltersAndRender);
-});
-
-document.getElementById("toggle-filters").addEventListener("click", () => {
-  const wrapper = document.getElementById("profit-filters");
-  wrapper.classList.toggle("hidden");
-  document.getElementById("toggle-filters").textContent = wrapper.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
-});
-
-
+  loadProfitEntries();
 
   document.getElementById("toggle-profit-table").addEventListener("click", () => {
-    showingAll = !showingAll;
-    renderTable(allEntries);
+    profitShowingAll = !profitShowingAll;
+    applyProfitFiltersAndRender();
+  });
+
+  document.querySelectorAll(".sort-option").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const field = btn.dataset.sort;
+      const dir = btn.dataset.dir;
+      profitCurrentSort = { field, asc: dir === "asc" };
+      applyProfitFiltersAndRender();
+    });
+  });
+
+  ["filter-category", "filter-payment", "filter-start-date", "filter-end-date", "filter-search", "filter-recurring"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("input", applyProfitFiltersAndRender);
+  });
+
+  document.getElementById("toggle-filters").addEventListener("click", () => {
+    const wrapper = document.getElementById("profit-filters");
+    wrapper.classList.toggle("hidden");
+    document.getElementById("toggle-filters").textContent = wrapper.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
   });
 
   document.getElementById("profitChartRange").addEventListener("change", e => {
@@ -401,55 +198,40 @@ document.getElementById("toggle-filters").addEventListener("click", () => {
     renderChart(allEntries, range);
   });
 
-  document.getElementById('profitSummaryRange').addEventListener('change', () => {
-  updateSummary(allEntries);
-});
+  const chartRange = document.getElementById("profitChartRange");
+  const chartStart = document.getElementById("profitChartStart");
+  const chartEnd = document.getElementById("profitChartEnd");
 
-  document.getElementById('toggle-profit-table').addEventListener('click', () => {
-  showingAll = !showingAll;
-  renderTable(allEntries);
-});
-
-const chartRange = document.getElementById('profitChartRange');
-const chartStart = document.getElementById('profitChartStart');
-const chartEnd = document.getElementById('profitChartEnd');
-
-chartRange.addEventListener('change', () => {
-  const isCustom = chartRange.value === 'custom';
-  chartStart.classList.toggle('hidden', !isCustom);
-  chartEnd.classList.toggle('hidden', !isCustom);
-  renderChart(allEntries, chartRange.value, chartStart.value, chartEnd.value);
-});
-
-chartStart.addEventListener('input', () => {
-  if (chartRange.value === 'custom') {
+  chartRange.addEventListener("change", () => {
+    const isCustom = chartRange.value === "custom";
+    chartStart.classList.toggle("hidden", !isCustom);
+    chartEnd.classList.toggle("hidden", !isCustom);
     renderChart(allEntries, chartRange.value, chartStart.value, chartEnd.value);
-  }
+  });
+
+  chartStart.addEventListener("input", () => {
+    if (chartRange.value === "custom") {
+      renderChart(allEntries, chartRange.value, chartStart.value, chartEnd.value);
+    }
+  });
+
+  chartEnd.addEventListener("input", () => {
+    if (chartRange.value === "custom") {
+      renderChart(allEntries, chartRange.value, chartStart.value, chartEnd.value);
+    }
+  });
+
+  const summaryRange = document.getElementById("profitSummaryRange");
+  const summaryStart = document.getElementById("profitSummaryStart");
+  const summaryEnd = document.getElementById("profitSummaryEnd");
+
+  summaryRange.addEventListener("change", () => {
+    const isCustom = summaryRange.value === "custom";
+    summaryStart.classList.toggle("hidden", !isCustom);
+    summaryEnd.classList.toggle("hidden", !isCustom);
+    updateSummary(allEntries);
+  });
+
+  summaryStart.addEventListener("input", () => updateSummary(allEntries));
+  summaryEnd.addEventListener("input", () => updateSummary(allEntries));
 });
-
-chartEnd.addEventListener('input', () => {
-  if (chartRange.value === 'custom') {
-    renderChart(allEntries, chartRange.value, chartStart.value, chartEnd.value);
-  }
-});
-
-// ✅ Add this block next:
-const summaryRange = document.getElementById('profitSummaryRange');
-const summaryStart = document.getElementById('profitSummaryStart');
-const summaryEnd = document.getElementById('profitSummaryEnd');
-
-summaryRange.addEventListener('change', () => {
-  const isCustom = summaryRange.value === 'custom';
-  summaryStart.classList.toggle('hidden', !isCustom);
-  summaryEnd.classList.toggle('hidden', !isCustom);
-  updateSummary(allEntries);
-});
-
-summaryStart.addEventListener('input', () => updateSummary(allEntries));
-summaryEnd.addEventListener('input', () => updateSummary(allEntries));
-
-  fetchDataAndRender();
-});
-
-loadProfitEntries();
-
