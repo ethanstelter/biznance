@@ -86,13 +86,7 @@ function updateSummary(entries) {
 
 
   function renderChart(entries, range, startDate = null, endDate = null) {
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfWeek = new Date(startOfDay);
-    startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-
+  
    let start;
 const now = new Date();
 const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
