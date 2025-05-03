@@ -249,6 +249,7 @@ function renderChart(entries, range, startDate = null, endDate = null) {
 }
 
 
+
   document.getElementById("toggle-profit-table").addEventListener("click", () => {
     showingAll = !showingAll;
     renderTable(allEntries);
