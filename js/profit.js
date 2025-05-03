@@ -247,6 +247,13 @@ firebase.auth().onAuthStateChanged(user => {
     renderProfitTable(filtered);
   }
 
+  document.getElementById("toggle-filters").addEventListener("click", () => {
+  const wrapper = document.getElementById("profit-filters");
+  wrapper.classList.toggle("hidden");
+  document.getElementById("toggle-filters").textContent =
+    wrapper.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
+});
+
   const chartRange = document.getElementById('profitChartRange');
   const chartStart = document.getElementById('profitChartStart');
   const chartEnd = document.getElementById('profitChartEnd');
