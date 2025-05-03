@@ -85,7 +85,7 @@ function updateSummary(entries) {
 }
 
 
-  function renderChart(entries, range, startDate = null, endDate = null) {
+function renderChart(entries, range, startDate = null, endDate = null) {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(startOfDay);
@@ -120,67 +120,65 @@ function updateSummary(entries) {
   let filtered = [...entries];
   if (start) filtered = filtered.filter(e => new Date(e.date) >= start);
   if (end) filtered = filtered.filter(e => new Date(e.date) <= end);
-}
 
-    const filtered = start ? entries.filter(e => new Date(e.date) >= start) : entries;
+  const groupBy = ['today', 'week', 'month'].includes(range) ? 'day' : 'month';
+  const labels = {};
 
-    const groupBy = ['today', 'week', 'month'].includes(range) ? 'day' : 'month';
-    const labels = {};
+  filtered.forEach(e => {
+    const d = new Date(e.date);
+    const key = groupBy === 'day'
+      ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (!labels[key]) labels[key] = { revenue: 0, expense: 0 };
+    labels[key][e.type] += e.amount;
+  });
 
-    filtered.forEach(e => {
-      const d = new Date(e.date);
-      const key = groupBy === 'day'
-        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-        : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      if (!labels[key]) labels[key] = { revenue: 0, expense: 0 };
-      labels[key][e.type] += e.amount;
-    });
+  const sortedKeys = Object.keys(labels).sort();
+  const labelList = sortedKeys;
+  const revenueList = sortedKeys.map(k => labels[k].revenue);
+  const expenseList = sortedKeys.map(k => labels[k].expense);
 
-   const labelList = sortedKeys;
-const revenueList = sortedKeys.map(k => labels[k].revenue);
-const expenseList = sortedKeys.map(k => labels[k].expense);
+  if (profitChart) profitChart.destroy();
 
-if (profitChart) profitChart.destroy();
-
-const groupBy = ['today', 'week', 'month'].includes(range) ? 'day' : 'month';
-
-profitChart = new Chart(chartCtx, {
-  type: 'line',
-  data: {
-    labels: labelList,
-    datasets: [
-      {
-        label: 'Revenue',
-        data: revenueList,
-        borderColor: '#22DD86',
-        backgroundColor: 'rgba(34, 221, 134, 0.2)',
-        fill: true,
-        tension: 0.3
-      },
-      {
-        label: 'Expenses',
-        data: expenseList,
-        borderColor: '#3B82F6',
-        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-        fill: true,
-        tension: 0.3
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    plugins: { legend: { position: 'top' } },
-    scales: {
-      y: { beginAtZero: true },
-      x: {
-        title: {
-          display: true,
-          text: groupBy === 'day' ? 'Day' : 'Month'
+  profitChart = new Chart(chartCtx, {
+    type: 'line',
+    data: {
+      labels: labelList,
+      datasets: [
+        {
+          label: 'Revenue',
+          data: revenueList,
+          borderColor: '#22DD86',
+          backgroundColor: 'rgba(34, 221, 134, 0.2)',
+          fill: true,
+          tension: 0.3
+        },
+        {
+          label: 'Expenses',
+          data: expenseList,
+          borderColor: '#3B82F6',
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          fill: true,
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        y: { beginAtZero: true },
+        x: {
+          title: {
+            display: true,
+            text: groupBy === 'day' ? 'Day' : 'Month'
+          }
         }
       }
     }
-  }
-});
+  });
+}
+
 
   function renderTable(data) {
     const tableBody = document.getElementById("profit-table-body");
