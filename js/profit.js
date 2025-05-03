@@ -295,5 +295,16 @@ firebase.auth().onAuthStateChanged(user => {
   summaryStart.addEventListener('input', () => updateSummary(profitAllEntries));
   summaryEnd.addEventListener('input', () => updateSummary(profitAllEntries));
 
+setTimeout(() => {
+  document.querySelectorAll(".sort-option").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const field = btn.dataset.sort;
+      const dir = btn.dataset.dir;
+      profitCurrentSort = { field, asc: dir === "asc" };
+      applyProfitFiltersAndRender();
+    });
+  });
+}, 0);
+  
   fetchDataAndRender();
 });
