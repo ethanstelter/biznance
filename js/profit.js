@@ -37,15 +37,36 @@ firebase.auth().onAuthStateChanged(user => {
     });
   }
 
-  function updateSummary(entries) {
-    const revenueTotal = entries.filter(e => e.type === "revenue").reduce((sum, e) => sum + e.amount, 0);
-    const expenseTotal = entries.filter(e => e.type === "expense").reduce((sum, e) => sum + e.amount, 0);
-    const netProfit = revenueTotal - expenseTotal;
+function updateSummary(entries) {
+  const range = document.getElementById('profitSummaryRange')?.value || 'all';
 
-    document.getElementById("profit-total-revenue").textContent = `$${revenueTotal.toFixed(2)}`;
-    document.getElementById("profit-total-expenses").textContent = `$${expenseTotal.toFixed(2)}`;
-    document.getElementById("profit-net").textContent = `$${netProfit.toFixed(2)}`;
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfDay);
+  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+  let start;
+
+  switch (range) {
+    case 'today': start = startOfDay; break;
+    case 'week': start = startOfWeek; break;
+    case 'month': start = startOfMonth; break;
+    case 'year': start = startOfYear; break;
+    default: start = null;
   }
+
+  const filtered = start ? entries.filter(e => new Date(e.date) >= start) : entries;
+
+  const revenueTotal = filtered.filter(e => e.type === "revenue").reduce((sum, e) => sum + e.amount, 0);
+  const expenseTotal = filtered.filter(e => e.type === "expense").reduce((sum, e) => sum + e.amount, 0);
+  const netProfit = revenueTotal - expenseTotal;
+
+  document.getElementById("profit-total-revenue").textContent = `$${revenueTotal.toFixed(2)}`;
+  document.getElementById("profit-total-expenses").textContent = `$${expenseTotal.toFixed(2)}`;
+  document.getElementById("profit-net").textContent = `$${netProfit.toFixed(2)}`;
+}
 
   function renderChart(entries, range) {
     const now = new Date();
@@ -152,6 +173,10 @@ firebase.auth().onAuthStateChanged(user => {
     const range = e.target.value;
     renderChart(allEntries, range);
   });
+
+  document.getElementById('profitSummaryRange').addEventListener('change', () => {
+  updateSummary(allEntries);
+});
 
   fetchDataAndRender();
 });
