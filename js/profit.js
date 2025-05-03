@@ -290,20 +290,3 @@ document.querySelectorAll(".sort-option").forEach(btn => {
 
 fetchDataAndRender();
 });
-
-// Open/close dropdown menus on click
-document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-  toggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    // Close any open dropdowns
-    document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.add('hidden'));
-    // Open the one we clicked
-    toggle.nextElementSibling.classList.toggle('hidden');
-  });
-});
-
-// Close dropdown if clicked outside
-document.addEventListener('click', () => {
-  document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.add('hidden'));
-});
-
