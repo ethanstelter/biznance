@@ -1,183 +1,153 @@
-<!-- profit.html -->
+<!-- profile.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Profit Page</title>
+  <title>Biznance – Profile Overview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            green: '#22DD86',
+            blue: '#3B82F6',
+            black: '#1E1E1E',
+            white: '#F9F9F9'
+          },
+          fontFamily: {
+            sans: ['ui-sans-serif', 'system-ui']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-white dark:bg-black text-black dark:text-white font-sans min-h-screen flex flex-col">
+
+  <div id="header"></div>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const firebaseConfig = {  apiKey: "AIzaSyCo5DMir__Aahm2jFjHrE5FMVMiw0SHJKg",
+    const firebaseConfig = {
+      apiKey: "AIzaSyCo5DMir__Aahm2jFjHrE5FMVMiw0SHJKg",
       authDomain: "biznance-22126.firebaseapp.com",
       projectId: "biznance-22126",
       storageBucket: "biznance-22126.appspot.com",
       messagingSenderId: "860851803576",
-      appId: "1:860851803576:web:5d4fb6b032346bba1cab4d",
-      measurementId: "G-045HJ2KPJP" };
+      appId: "1:860851803576:web:5d4fb6b032346bba1cab4d"
+    };
     firebase.initializeApp(firebaseConfig);
   </script>
+
+  <main class="flex-1 flex flex-col px-4 py-8">
+    <div class="w-full max-w-6xl mx-auto space-y-12">
+
+      <!-- Summary Section -->
+      <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-4">
+        <h2 class="text-xl font-bold text-center">Overview Summary</h2>
+        <div class="flex flex-wrap gap-4 items-center justify-center text-sm">
+          <select id="summary-range" class="input w-40 text-gray-500">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
+            <option value="custom">Custom Range</option>
+          </select>
+          <input type="date" id="summary-start" class="input w-40 hidden" />
+          <input type="date" id="summary-end" class="input w-40 hidden" />
+          <div class="text-lg font-semibold">Profit: <span id="summary-profit" class="text-black dark:text-white">$0.00</span></div>
+          <div class="text-lg font-semibold">Revenue: <span id="summary-revenue" class="text-green">$0.00</span></div>
+          <div class="text-lg font-semibold">Expenses: <span id="summary-expenses" class="text-blue">$0.00</span></div>
+        </div>
+      </section>
+
+      <!-- Chart Section -->
+      <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold text-black dark:text-white">Profit, Revenue & Expenses Over Time</h2>
+          <select id="chart-range" class="input w-40 text-gray-500">
+            <option value="all" selected>All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+        <div id="custom-date-range" class="hidden space-x-2 mb-4">
+          <input type="date" id="chart-start-date" class="input w-40" />
+          <input type="date" id="chart-end-date" class="input w-40" />
+        </div>
+        <canvas id="profitChart" height="100"></canvas>
+      </section>
+
+      <!-- Table Section -->
+      <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6 w-full">
+        <div class="flex justify-between items-center">
+          <h2 class="text-2xl font-bold text-center w-full text-black dark:text-white">All Entries Spreadsheet</h2>
+        </div>
+
+        <!-- Filter Toggle -->
+        <div class="flex justify-start">
+          <button id="toggle-filters" class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-neutral-800 hover:bg-gray-300 dark:hover:bg-neutral-700 transition">
+            Show Filters
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <div id="spreadsheet-filters" class="flex flex-wrap gap-4 mb-4 hidden">
+          <input type="text" id="filter-search" class="input w-56" placeholder="Search by source or notes" />
+          <label class="flex items-center space-x-2 text-sm">
+            <input type="checkbox" id="filter-recurring" class="form-checkbox" />
+            <span>Recurring Only</span>
+          </label>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left border dark:border-gray-700">
+            <thead class="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-white">
+              <tr>
+                <th class="px-4 py-2">Date</th>
+                <th class="px-4 py-2">Source</th>
+                <th class="px-4 py-2">Amount</th>
+                <th class="px-4 py-2">Category</th>
+                <th class="px-4 py-2">Payment</th>
+                <th class="px-4 py-2">Notes</th>
+                <th class="px-4 py-2">Recurring</th>
+              </tr>
+            </thead>
+            <tbody id="profile-table-body" class="bg-white dark:bg-black text-black dark:text-white">
+              <!-- JS populates here -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-6">
+          <button id="toggle-table" class="w-full bg-black text-white py-2 rounded font-semibold hover:bg-opacity-90 transition">
+            Show All
+          </button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="footer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/js/profile.js"></script>
+
   <style>
-  /* Fix for group-hover not working on <th> in some browsers */
-  th.group:hover .group-hover\\:block {
-    display: block;
-  }
-</style>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100">
-  <div class="max-w-5xl mx-auto space-y-6">
-
-  <div class="flex flex-wrap gap-2 items-center justify-end mb-2">
-  <select id="profitSummaryRange" class="border border-gray-300 rounded px-2 py-1 text-sm">
-    <option value="all">All Time</option>
-    <option value="today">Today</option>
-    <option value="week">This Week</option>
-    <option value="month">This Month</option>
-    <option value="year">This Year</option>
-    <option value="custom">Custom Range</option>
-  </select>
-
-  <input type="date" id="profitSummaryStart" class="border border-gray-300 rounded px-2 py-1 text-sm hidden" />
-  <input type="date" id="profitSummaryEnd" class="border border-gray-300 rounded px-2 py-1 text-sm hidden" />
-</div>
-
-
-    <!-- Profit Summary -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white p-4 shadow rounded-lg">
-        <div class="text-gray-500 text-sm">Total Revenue</div>
-        <div id="profit-total-revenue" class="text-xl font-bold text-green-500">$0.00</div>
-      </div>
-      <div class="bg-white p-4 shadow rounded-lg">
-        <div class="text-gray-500 text-sm">Total Expenses</div>
-        <div id="profit-total-expenses" class="text-xl font-bold text-blue-500">$0.00</div>
-      </div>
-      <div class="bg-white p-4 shadow rounded-lg">
-        <div class="text-gray-500 text-sm">Net Profit</div>
-        <div id="profit-net" class="text-xl font-bold text-black">$0.00</div>
-      </div>
-    </div>
-
-    <!-- Profit Line Chart -->
-    <div class="bg-white p-6 rounded-lg shadow">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-black">Profit Overview</h2>
-       <select id="profitChartRange" class="border border-gray-300 rounded px-2 py-1 text-sm">
-  <option value="all">All Time</option>
-  <option value="today">Today</option>
-  <option value="week">This Week</option>
-  <option value="month">This Month</option>
-  <option value="year">This Year</option>
-  <option value="custom">Custom Range</option>
-</select>
-
-<input type="date" id="profitChartStart" class="border border-gray-300 rounded px-2 py-1 text-sm hidden" />
-<input type="date" id="profitChartEnd" class="border border-gray-300 rounded px-2 py-1 text-sm hidden" />
-        </select>
-      </div>
-      <canvas id="profitTrendChart" style="max-height: 300px;"></canvas>
-    </div>
-
-    <!-- Profit Spreadsheet Section -->
-<section class="max-w-5xl mx-auto bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-6 w-full">
-  <div class="flex justify-between items-center">
-    <h2 class="text-2xl font-bold text-gray-700 dark:text-white text-center w-full">Profit Spreadsheet</h2>
-  </div>
-
-  <!-- Filters Toggle -->
-  <div class="flex justify-start">
-    <button id="toggle-filters" class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-neutral-800 hover:bg-gray-300 dark:hover:bg-neutral-700 transition">
-      Show Filters
-    </button>
-  </div>
-
-  <!-- Filters -->
-  <div id="profit-filters" class="flex flex-wrap gap-4 mb-4 hidden">
-    <select id="filter-category" class="input w-40 text-gray-500">
-      <option value="">All Categories</option>
-    </select>
-    <select id="filter-payment" class="input w-40 text-gray-500">
-      <option value="">All Payment Methods</option>
-    </select>
-    <div class="flex flex-col">
-      <label for="filter-start-date" class="text-xs font-medium mb-1">Start Date</label>
-      <input type="date" id="filter-start-date" class="input w-40" />
-    </div>
-    <div class="flex flex-col">
-      <label for="filter-end-date" class="text-xs font-medium mb-1">End Date</label>
-      <input type="date" id="filter-end-date" class="input w-40" />
-    </div>
-    <input type="text" id="filter-search" class="input w-56" placeholder="Search by source or notes" />
-    <label class="flex items-center space-x-2 text-sm text-black dark:text-white">
-      <input type="checkbox" id="filter-recurring" class="form-checkbox" />
-      <span>Recurring Only</span>
-    </label>
-  </div>
-
-  <!-- Table -->
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm text-left border dark:border-gray-700">
-      <thead class="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-white">
-        <tr>
-          <th class="px-4 py-2 relative group">
-            Date <span class="ml-1 cursor-pointer">&#x25BC;</span>
-            <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="asc">Oldest → Newest</button>
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="date" data-dir="desc">Newest → Oldest</button>
-            </div>
-          </th>
-         
-          <th class="px-4 py-2">
-  Type
-</th>
-          <th class="px-4 py-2 relative group">
-  Source <span class="ml-1 cursor-pointer">&#x25BC;</span>
-  <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
-    <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="asc">A → Z</button>
-    <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="source" data-dir="desc">Z → A</button>
-  </div>
-</th>
-
-          <th class="px-4 py-2 relative group">
-            Amount <span class="ml-1 cursor-pointer">&#x25BC;</span>
-            <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="asc">Low → High</button>
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="amount" data-dir="desc">High → Low</button>
-            </div>
-          </th>
-          <th class="px-4 py-2 relative group">
-            Category <span class="ml-1 cursor-pointer">&#x25BC;</span>
-            <div class="absolute z-10 hidden group-hover:block bg-white dark:bg-black border dark:border-gray-700 shadow rounded mt-1 w-36">
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="asc">A → Z</button>
-              <button class="block w-full text-left px-4 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 sort-option" data-sort="category" data-dir="desc">Z → A</button>
-            </div>
-          </th>
-          <th class="px-4 py-2">Payment</th>
-          <th class="px-4 py-2">Notes</th>
-          <th class="px-4 py-2">Recurring</th>
-        </tr>
-      </thead>
-      <tbody id="profit-table-body" class="bg-white dark:bg-black text-black dark:text-white">
-        <!-- Populated by JS -->
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Show More Button -->
-  <div class="mt-6">
-    <button
-      id="toggle-profit-table"
-      class="w-full bg-gray-700 text-white py-2 rounded font-semibold hover:bg-opacity-90 transition"
-    >
-      Show All
-    </button>
-  </div>
-</section>
-
-
-  <script src="/js/profit.js"></script>
+    .input {
+      @apply px-4 py-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white;
+    }
+  </style>
 </body>
 </html>
