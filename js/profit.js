@@ -1,130 +1,210 @@
-// ✅ COMPLETE OVERHAUL FOR profit.js
-// Matches Revenue/Expense layout (filters, sort, recurring, show more, etc.)
-// Connects perfectly with your provided profit.html
-
-firebase.auth().onAuthStateChanged(user => {
+firebase.auth().onAuthStateChanged(async user => {
   if (!user) return (window.location.href = "/login.html");
+
   const db = firebase.firestore();
 
-  let allProfitEntries = [];
-  let showingAll = false;
-  let currentSort = { field: "date", asc: false };
+  const tableBody = document.getElementById("profile-table-body");
+  const summaryProfit = document.getElementById("summary-profit");
+  const summaryRevenue = document.getElementById("summary-revenue");
+  const summaryExpenses = document.getElementById("summary-expenses");
+  const chartCanvas = document.getElementById("profitChart").getContext("2d");
 
-  const tableBody = document.getElementById("profit-table-body");
-  const toggleBtn = document.getElementById("toggle-profit-table");
+  const rangeSelect = document.getElementById("summary-range");
+  const startInput = document.getElementById("summary-start");
+  const endInput = document.getElementById("summary-end");
+  const chartRange = document.getElementById("chart-range");
+  const chartStart = document.getElementById("chart-start-date");
+  const chartEnd = document.getElementById("chart-end-date");
 
-  const filters = {
-    category: document.getElementById("filter-category"),
-    payment: document.getElementById("filter-payment"),
-    start: document.getElementById("filter-start-date"),
-    end: document.getElementById("filter-end-date"),
-    search: document.getElementById("filter-search"),
-    recurring: document.getElementById("filter-recurring")
-  };
+  const filterSearch = document.getElementById("filter-search");
+  const filterRecurring = document.getElementById("filter-recurring");
+  const toggleFilters = document.getElementById("toggle-filters");
+  const filterSection = document.getElementById("spreadsheet-filters");
+  const toggleTable = document.getElementById("toggle-table");
 
-  const addSortListeners = () => {
-    document.querySelectorAll(".sort-option").forEach(btn => {
-      btn.addEventListener("click", () => {
-        currentSort.field = btn.dataset.sort;
-        currentSort.asc = btn.dataset.dir === "asc";
-        applyFiltersAndRender();
-      });
-    });
-  };
+  let allEntries = [];
+  let showAll = false;
+  let chart;
 
-  const applyFiltersAndRender = () => {
-    let filtered = [...allProfitEntries];
-    const start = filters.start.value;
-    const end = filters.end.value;
-    const search = filters.search.value.toLowerCase();
-
-    if (filters.category.value)
-      filtered = filtered.filter(e => e.category === filters.category.value);
-    if (filters.payment.value)
-      filtered = filtered.filter(e => e.paymentMethod === filters.payment.value);
-    if (start)
-      filtered = filtered.filter(e => new Date(e.date) >= new Date(start));
-    if (end)
-      filtered = filtered.filter(e => new Date(e.date) <= new Date(end));
-    if (filters.recurring.checked)
-      filtered = filtered.filter(e => e.isRecurring || e.frequency);
-    if (search)
-      filtered = filtered.filter(e =>
-        e.source.toLowerCase().includes(search) ||
-        e.notes.toLowerCase().includes(search)
-      );
-
-    filtered.sort((a, b) => {
-      const valA = a[currentSort.field];
-      const valB = b[currentSort.field];
-      if (valA < valB) return currentSort.asc ? -1 : 1;
-      if (valA > valB) return currentSort.asc ? 1 : -1;
-      return 0;
-    });
-
-    renderTable(filtered);
-  };
-
-  const renderTable = (entries) => {
-    const rows = showingAll ? entries : entries.slice(0, 5);
-    tableBody.innerHTML = rows.map(entry => `
-      <tr class="border-t dark:border-gray-700 group">
-        <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
-        <td class="px-4 py-2 font-semibold ${entry.type === 'revenue' ? 'text-green-500' : 'text-blue-500'}">
-          ${entry.type.charAt(0).toUpperCase() + entry.type.slice(1)}
-        </td>
-        <td class="px-4 py-2">${entry.source}</td>
-        <td class="px-4 py-2">$${entry.amount.toFixed(2)}</td>
-        <td class="px-4 py-2">${entry.category}</td>
-        <td class="px-4 py-2">${entry.paymentMethod}</td>
-        <td class="px-4 py-2 relative">
-          <div class="max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
-            ${entry.notes.length > 30 ? entry.notes.slice(0, 30) + "..." : entry.notes}
-          </div>
-          ${entry.notes.length > 30 ? `<div class="absolute z-20 mt-2 hidden group-hover:flex flex-col bg-white dark:bg-black border dark:border-gray-700 shadow p-2 rounded text-sm w-64"><span class="font-semibold text-gray-700 dark:text-gray-300 mb-1">Full Note</span><span class="text-black dark:text-white">${entry.notes}</span></div>` : ""}
-        </td>
-        <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
-      </tr>
-    `).join("");
-    toggleBtn.textContent = showingAll ? "Collapse" : "Show All";
-  };
-
-  toggleBtn.addEventListener("click", () => {
-    showingAll = !showingAll;
-    applyFiltersAndRender();
+  toggleFilters.addEventListener("click", () => {
+    filterSection.classList.toggle("hidden");
+    toggleFilters.textContent = filterSection.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
   });
 
-  document.getElementById("toggle-filters").addEventListener("click", () => {
-    const box = document.getElementById("profit-filters");
-    box.classList.toggle("hidden");
-    document.getElementById("toggle-filters").textContent = box.classList.contains("hidden") ? "Show Filters" : "Hide Filters";
+  toggleTable.addEventListener("click", () => {
+    showAll = !showAll;
+    renderTable();
   });
 
-  Object.values(filters).forEach(el => {
-    if (el) el.addEventListener("input", applyFiltersAndRender);
-  });
+  function getDateRange(range) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const week = new Date(today);
+    week.setDate(today.getDate() - today.getDay());
+    const month = new Date(now.getFullYear(), now.getMonth(), 1);
+    const year = new Date(now.getFullYear(), 0, 1);
 
-  const fetchAndMerge = async () => {
-    const [revenueSnap, expenseSnap] = await Promise.all([
+    switch (range) {
+      case "today": return [today, now];
+      case "week": return [week, now];
+      case "month": return [month, now];
+      case "year": return [year, now];
+      case "custom":
+        return [new Date(startInput.value), new Date(endInput.value)];
+      default: return [null, null];
+    }
+  }
+
+  async function loadEntries() {
+    const [revSnap, expSnap] = await Promise.all([
       db.collection("revenue").where("uid", "==", user.uid).get(),
       db.collection("expenses").where("uid", "==", user.uid).get()
     ]);
-    const revenue = revenueSnap.docs.map(doc => ({ ...doc.data(), type: "revenue" }));
-    const expenses = expenseSnap.docs.map(doc => ({ ...doc.data(), type: "expense" }));
-    const merged = [...revenue, ...expenses].map(e => ({
-      ...e,
-      date: e.date?.toDate?.() || new Date(0),
-      amount: parseFloat(e.amount),
-      notes: e.notes || "",
-      frequency: e.frequency || "",
-      category: e.category || "",
-      paymentMethod: e.paymentMethod || "",
-      source: e.source || ""
-    }));
-    allProfitEntries = merged;
-    applyFiltersAndRender();
-  };
 
-  addSortListeners();
-  fetchAndMerge();
+    const revEntries = revSnap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        type: "revenue",
+        date: data.date?.toDate() || new Date(),
+        amount: parseFloat(data.amount),
+        notes: data.notes || "",
+        source: data.source || "—"
+      };
+    });
+
+    const expEntries = expSnap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        type: "expense",
+        date: data.date?.toDate() || new Date(),
+        amount: parseFloat(data.amount),
+        notes: data.notes || "",
+        source: data.source || "—"
+      };
+    });
+
+    allEntries = [...revEntries, ...expEntries].sort((a, b) => b.date - a.date);
+    updateSummary();
+    renderChart();
+    renderTable();
+  }
+
+  function updateSummary() {
+    const [start, end] = getDateRange(rangeSelect.value);
+    let totalRevenue = 0, totalExpenses = 0;
+
+    allEntries.forEach(entry => {
+      if (start && new Date(entry.date) < start) return;
+      if (end && new Date(entry.date) > end) return;
+      if (entry.type === "revenue") totalRevenue += entry.amount;
+      else if (entry.type === "expense") totalExpenses += entry.amount;
+    });
+
+    summaryRevenue.textContent = `$${totalRevenue.toFixed(2)}`;
+    summaryExpenses.textContent = `$${totalExpenses.toFixed(2)}`;
+    summaryProfit.textContent = `$${(totalRevenue - totalExpenses).toFixed(2)}`;
+  }
+
+  function renderChart() {
+    const range = chartRange.value;
+    const [start, end] = getDateRange(range);
+    const useDay = ["today", "week", "month"].includes(range);
+
+    const dataMap = {};
+
+    allEntries.forEach(entry => {
+      const d = new Date(entry.date);
+      if (start && d < start) return;
+      if (end && d > end) return;
+
+      const key = useDay
+        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+        : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+      if (!dataMap[key]) dataMap[key] = { revenue: 0, expense: 0 };
+      if (entry.type === "revenue") dataMap[key].revenue += entry.amount;
+      if (entry.type === "expense") dataMap[key].expense += entry.amount;
+    });
+
+    const sortedKeys = Object.keys(dataMap).sort();
+    const labels = sortedKeys;
+    const revenue = sortedKeys.map(k => dataMap[k].revenue);
+    const expenses = sortedKeys.map(k => dataMap[k].expense);
+    const profit = sortedKeys.map(k => dataMap[k].revenue - dataMap[k].expense);
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(chartCanvas, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          { label: "Profit", data: profit, borderColor: "#000", backgroundColor: "rgba(0,0,0,0.2)", fill: true },
+          { label: "Revenue", data: revenue, borderColor: "#22DD86", backgroundColor: "rgba(34,221,134,0.2)", fill: true },
+          { label: "Expenses", data: expenses, borderColor: "#3B82F6", backgroundColor: "rgba(59,130,246,0.2)", fill: true }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: true }, tooltip: { mode: "index", intersect: false } },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: "$" } },
+          x: { title: { display: true, text: useDay ? "Day" : "Month" } }
+        }
+      }
+    });
+  }
+
+  function renderTable() {
+    let filtered = [...allEntries];
+
+    const search = filterSearch.value.toLowerCase();
+    if (search) {
+      filtered = filtered.filter(e =>
+        e.source.toLowerCase().includes(search) || e.notes.toLowerCase().includes(search)
+      );
+    }
+
+    if (filterRecurring.checked) {
+      filtered = filtered.filter(e => e.isRecurring || e.frequency);
+    }
+
+    const rows = showAll ? filtered : filtered.slice(0, 5);
+    tableBody.innerHTML = rows.map(entry => `
+      <tr class="border-t dark:border-gray-700 ${entry.type === "revenue" ? 'bg-green/10' : 'bg-blue/10'}">
+        <td class="px-4 py-2">${new Date(entry.date).toLocaleDateString()}</td>
+        <td class="px-4 py-2">${entry.source}</td>
+        <td class="px-4 py-2">$${entry.amount.toFixed(2)}</td>
+        <td class="px-4 py-2">${entry.category || "—"}</td>
+        <td class="px-4 py-2">${entry.paymentMethod || "—"}</td>
+        <td class="px-4 py-2">${entry.notes.length > 30 ? entry.notes.slice(0, 30) + "..." : entry.notes}</td>
+        <td class="px-4 py-2 text-center">${entry.frequency || "—"}</td>
+      </tr>
+    `).join("");
+
+    toggleTable.textContent = showAll ? "Collapse" : "Show All";
+  }
+
+  // Listeners
+  rangeSelect.addEventListener("change", () => {
+    const isCustom = rangeSelect.value === "custom";
+    startInput.classList.toggle("hidden", !isCustom);
+    endInput.classList.toggle("hidden", !isCustom);
+    updateSummary();
+  });
+
+  [startInput, endInput].forEach(el => el.addEventListener("input", updateSummary));
+
+  chartRange.addEventListener("change", () => {
+    document.getElementById("custom-date-range").classList.toggle("hidden", chartRange.value !== "custom");
+    renderChart();
+  });
+
+  [chartStart, chartEnd].forEach(el => el.addEventListener("input", renderChart));
+  [filterSearch, filterRecurring].forEach(el => el.addEventListener("input", renderTable));
+
+  // Load everything
+  loadEntries();
 });
