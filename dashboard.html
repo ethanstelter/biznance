@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Biznance – [Dashboard]</title>
-
-  <!-- TailwindCSS + Custom Config -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Biznance – Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -23,105 +21,97 @@
           }
         }
       }
-    }
+    };
   </script>
 </head>
 <body class="bg-white dark:bg-black text-black dark:text-white font-sans min-h-screen flex flex-col">
 
-  <!-- Header will auto-load here -->
+  <!-- Header -->
   <div id="header"></div>
-<!-- Firebase SDK -->
-<!-- Firebase SDKs -->
-<!-- Firebase v8.10.1 SDKs -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<!-- Firebase Config & Initialization -->
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCo5DMir__Aahm2jFjHrE5FMVMiw0SHJKg",
-    authDomain: "biznance-22126.firebaseapp.com",
-    projectId: "biznance-22126",
-    storageBucket: "biznance-22126.firebasestorage.app",
-    messagingSenderId: "860851803576",
-    appId: "1:860851803576:web:5d4fb6b032346bba1cab4d",
-    measurementId: "G-045HJ2KPJP"
-  };
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCo5DMir__Aahm2jFjHrE5FMVMiw0SHJKg",
+      authDomain: "biznance-22126.firebaseapp.com",
+      projectId: "biznance-22126",
+      storageBucket: "biznance-22126.appspot.com",
+      messagingSenderId: "860851803576",
+      appId: "1:860851803576:web:5d4fb6b032346bba1cab4d"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col px-4 py-8">
+    <div class="w-full max-w-6xl mx-auto space-y-12">
 
-  auth.onAuthStateChanged(user => {
-    if (!user) {
-      window.location.href = "/login.html";
-    }
-  });
-</script>
+      <!-- Summary Section -->
+      <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-4">
+        <h2 class="text-xl font-bold text-center">Financial Overview</h2>
+        <div class="flex flex-wrap gap-4 items-center justify-center text-sm">
+          <select id="summary-range" class="input w-40 text-gray-500">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
+            <option value="custom">Custom Range</option>
+          </select>
+          <input type="date" id="summary-start" class="input w-40 hidden"/>
+          <input type="date" id="summary-end" class="input w-40 hidden"/>
 
+          <div class="text-lg font-semibold">Profit: <span id="summary-profit" class="text-black dark:text-white">$0.00</span></div>
+          <div class="text-lg font-semibold">Revenue: <span id="summary-revenue" class="text-green">$0.00</span></div>
+          <div class="text-lg font-semibold">Expenses: <span id="summary-expenses" class="text-blue">$0.00</span></div>
+        </div>
+      </section>
 
-<main class="flex-1 px-6 py-10">
-  <h2 class="text-2xl font-bold text-green dark:text-green mb-6 text-center">Your Financial Dashboard</h2>
-<div class="max-w-md mx-auto mb-10 text-center">
-  <label for="timeFilter" class="block mb-2 text-black dark:text-white font-semibold">View Data:</label>
-  <select id="timeFilter" class="w-full p-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white">
-    <option value="all">All Time</option>
-    <option value="week">This Week</option>
-    <option value="month">This Month</option>
-    <option value="year">This Year</option>
-    <option value="custom">Custom Range</option>
-  </select>
+      <!-- Chart Section -->
+      <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold text-black dark:text-white">Performance Over Time</h2>
+          <select id="chart-range" class="input w-40 text-gray-500">
+            <option value="all" selected>All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+        <div id="custom-date-range" class="hidden space-x-2 mb-4">
+          <input type="date" id="chart-start-date" class="input w-40"/>
+          <input type="date" id="chart-end-date" class="input w-40"/>
+        </div>
+        <canvas id="dashboardChart" height="100"></canvas>
+      </section>
 
-  <div id="customDateInputs" class="mt-4 hidden">
-    <label class="block text-sm mb-1 text-black dark:text-white">Start Date</label>
-    <input type="date" id="startDate" class="w-full mb-2 p-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white">
-    
-    <label class="block text-sm mb-1 text-black dark:text-white">End Date</label>
-    <input type="date" id="endDate" class="w-full p-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white">
-  </div>
-</div>
+      <!-- Button -->
+      <section class="text-center">
+        <a href="index.html" class="inline-block bg-black text-white px-6 py-3 rounded shadow hover:bg-opacity-90 transition">
+          Go to Main Page
+        </a>
+      </section>
 
-  <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-10">
-    <div class="bg-white dark:bg-neutral-900 rounded-lg p-4 shadow text-center">
-      <p class="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
-      <h3 class="text-xl font-bold text-green mt-2">$0.00</h3>
     </div>
-    <!-- Revenue Chart -->
-<div class="bg-white dark:bg-neutral-900 p-4 rounded shadow mt-10">
-  <h3 class="text-lg font-semibold text-center text-black dark:text-white mb-4">Revenue Over Time</h3>
-  <canvas id="revenueChart" class="w-full max-w-md mx-auto"></canvas>
-</div>
-    <div class="bg-white dark:bg-neutral-900 rounded-lg p-4 shadow text-center">
-      <p class="text-sm text-gray-500 dark:text-gray-400">Total Expenses</p>
-      <h3 class="text-xl font-bold text-blue mt-2">$0.00</h3>
-    </div>
-<!-- Expense Chart -->
-<div class="bg-white dark:bg-neutral-900 p-4 rounded shadow mt-10">
-  <h3 class="text-lg font-semibold text-center text-black dark:text-white mb-4">Expenses Over Time</h3>
-  <canvas id="expenseChart" class="w-full max-w-md mx-auto"></canvas>
-</div>
-    <div class="bg-white dark:bg-neutral-900 rounded-lg p-4 shadow text-center">
-      <p class="text-sm text-gray-500 dark:text-gray-400">Profit</p>
-      <h3 class="text-xl font-bold text-black dark:text-white mt-2">$0.00</h3>
-    </div>
-  </div>
-<!-- Profit Chart -->
-<div class="bg-white dark:bg-neutral-900 p-4 rounded shadow mt-10">
-  <h3 class="text-lg font-semibold text-center text-black dark:text-white mb-4">Profit Over Time</h3>
-  <canvas id="profitChart" class="w-full max-w-md mx-auto"></canvas>
-</div>
-  <div class="bg-white dark:bg-neutral-900 rounded-lg p-6 shadow text-center">
-    <p class="text-gray-500 dark:text-gray-400 mb-2">Graphs & trends coming soon...</p>
-    <div class="w-full h-40 bg-gray-100 dark:bg-gray-800 rounded"></div>
-  </div>
-</main>
+  </main>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/js/dashboard.js"></script>
-
-  <!-- Footer will auto-load here -->
+  <!-- Footer -->
   <div id="footer"></div>
 
+  <!-- Scripts -->
   <script src="/js/components.js"></script>
+  <script src="/js/dashboard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    .input {
+      @apply px-4 py-2 rounded bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-black dark:text-white;
+    }
+  </style>
 </body>
 </html>
