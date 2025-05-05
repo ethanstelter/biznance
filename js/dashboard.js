@@ -1,157 +1,189 @@
+firebase.auth().onAuthStateChanged(async user => {
+  if (!user) return (window.location.href = "/login.html");
 
+  const db = firebase.firestore();
+  const summaryProfit = document.getElementById("summary-profit");
+  const summaryRevenue = document.getElementById("summary-revenue");
+  const summaryExpenses = document.getElementById("summary-expenses");
 
-const db = firebase.firestore();
+  const rangeSelect = document.getElementById("summary-range");
+  const startInput = document.getElementById("summary-start");
+  const endInput = document.getElementById("summary-end");
 
-async function fetchData(collection, dateRange) {
-  let query = db.collection(collection)
-    .where("uid", "==", firebase.auth().currentUser.uid);
+  const chartRange = document.getElementById("chart-range");
+  const chartStart = document.getElementById("chart-start-date");
+  const chartEnd = document.getElementById("chart-end-date");
 
-  if (dateRange) {
-    query = query.where("timestamp", ">=", dateRange.start)
-                 .where("timestamp", "<=", dateRange.end);
+  const chartCanvas = document.getElementById("dashboardChart").getContext("2d");
+
+  let allEntries = [];
+  let chart;
+
+  function getDateRange(range, customStart, customEnd) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const week = new Date(today);
+    week.setDate(today.getDate() - today.getDay());
+    const month = new Date(now.getFullYear(), now.getMonth(), 1);
+    const year = new Date(now.getFullYear(), 0, 1);
+
+    switch (range) {
+      case "today": return [today, now];
+      case "week": return [week, now];
+      case "month": return [month, now];
+      case "year": return [year, now];
+      case "custom":
+        return [new Date(customStart), new Date(customEnd)];
+      default: return [null, null];
+    }
   }
 
-  query = query.orderBy("timestamp");
+  async function loadData() {
+    const [revSnap, expSnap] = await Promise.all([
+      db.collection("revenue").where("uid", "==", user.uid).get(),
+      db.collection("expenses").where("uid", "==", user.uid).get()
+    ]);
 
-  const snapshot = await query.get();
-  const dataByDate = {};
+    const revEntries = revSnap.docs.map(doc => {
+      const d = doc.data();
+      return {
+        ...d,
+        type: "revenue",
+        amount: parseFloat(d.amount),
+        date: d.date?.toDate() || new Date()
+      };
+    });
 
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    const ts = data.timestamp?.toDate();
-    if (!ts) return;
+    const expEntries = expSnap.docs.map(doc => {
+      const d = doc.data();
+      return {
+        ...d,
+        type: "expense",
+        amount: parseFloat(d.amount),
+        date: d.date?.toDate() || new Date()
+      };
+    });
 
-    const dateStr = ts.toISOString().split("T")[0];
-    dataByDate[dateStr] = (dataByDate[dateStr] || 0) + data.amount;
-  });
-
-  console.log("📊 Data for chart:", collection, dataByDate);
-  return dataByDate;
-}
-
-
-function renderChart(id, label, data, color) {
-  const canvas = document.getElementById(id);
-  if (!canvas) {
-    console.log(`❌ Canvas element with id "${id}" not found.`);
-    return;
+    allEntries = [...revEntries, ...expEntries];
+    updateSummary();
+    renderChart();
   }
 
-  console.log("🎯 Checking canvas element:", id, canvas);
-  const ctx = canvas.getContext("2d");
-  console.log("🖌️ Canvas context for", id, ":", ctx);
+  function updateSummary() {
+    const range = rangeSelect.value;
+    const [start, end] = getDateRange(range, startInput.value, endInput.value);
 
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: Object.keys(data),
-      datasets: [{
-        label: label,
-        data: Object.values(data),
-        borderColor: color,
-        backgroundColor: color + "20",
-        fill: true,
-        tension: 0.3
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true
+    let totalRevenue = 0;
+    let totalExpenses = 0;
+
+    allEntries.forEach(entry => {
+      const date = new Date(entry.date);
+      if (start && date < start) return;
+      if (end && date > end) return;
+
+      if (entry.type === "revenue") totalRevenue += entry.amount;
+      if (entry.type === "expense") totalExpenses += entry.amount;
+    });
+
+    summaryRevenue.textContent = `$${totalRevenue.toFixed(2)}`;
+    summaryExpenses.textContent = `$${totalExpenses.toFixed(2)}`;
+    summaryProfit.textContent = `$${(totalRevenue - totalExpenses).toFixed(2)}`;
+  }
+
+  function renderChart() {
+    const range = chartRange.value;
+    const [start, end] = getDateRange(range, chartStart.value, chartEnd.value);
+    const useDay = ["today", "week", "month"].includes(range);
+
+    const dataMap = {};
+
+    allEntries.forEach(entry => {
+      const date = new Date(entry.date);
+      if (start && date < start) return;
+      if (end && date > end) return;
+
+      const key = useDay
+        ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+        : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+      if (!dataMap[key]) dataMap[key] = { revenue: 0, expense: 0 };
+      if (entry.type === "revenue") dataMap[key].revenue += entry.amount;
+      if (entry.type === "expense") dataMap[key].expense += entry.amount;
+    });
+
+    const sortedKeys = Object.keys(dataMap).sort();
+    const labels = sortedKeys;
+    const revenue = sortedKeys.map(k => dataMap[k].revenue);
+    const expenses = sortedKeys.map(k => dataMap[k].expense);
+    const profit = sortedKeys.map(k => dataMap[k].revenue - dataMap[k].expense);
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(chartCanvas, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Profit",
+            data: profit,
+            borderColor: "#1E1E1E",
+            backgroundColor: "rgba(30,30,30,0.2)",
+            fill: true
+          },
+          {
+            label: "Revenue",
+            data: revenue,
+            borderColor: "#22DD86",
+            backgroundColor: "rgba(34,221,134,0.2)",
+            fill: true
+          },
+          {
+            label: "Expenses",
+            data: expenses,
+            borderColor: "#3B82F6",
+            backgroundColor: "rgba(59,130,246,0.2)",
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true },
+          tooltip: { mode: "index", intersect: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: "$" }
+          },
+          x: {
+            title: { display: true, text: useDay ? "Day" : "Month" }
+          }
         }
       }
-    }
-  });
-}
-function getDateRange(filter) {
-  const today = new Date();
-  const start = new Date();
-
-  if (filter === "week") {
-    start.setDate(today.getDate() - 7);
-  } else if (filter === "month") {
-    start.setMonth(today.getMonth() - 1);
-  } else if (filter === "year") {
-    start.setFullYear(today.getFullYear() - 1);
-  } else if (filter === "custom") {
-    const startDate = document.getElementById("startDate").value;
-    const endDate = document.getElementById("endDate").value;
-    if (!startDate || !endDate) return null;
-    return {
-      start: new Date(startDate + "T00:00:00"),
-      end: new Date(endDate + "T23:59:59")
-    };
-  } else {
-    return null; // all time
+    });
   }
 
-  return {
-    start: new Date(start.setHours(0, 0, 0, 0)),
-    end: new Date(today.setHours(23, 59, 59, 999))
-  };
-}
-
-async function loadAllCharts() {
-  const selectedFilter = document.getElementById("timeFilter").value;
-  const dateRange = getDateRange(selectedFilter);
-
-  // 🔒 Prevent chart from running if custom range is missing
-  if (selectedFilter === "custom" && !dateRange) {
-    console.log("⛔ Waiting for full custom date range...");
-    return;
-  }
-
-  const revenueData = await fetchData("revenue", dateRange);
-  const expenseData = await fetchData("expenses", dateRange);
-
-  const allDates = new Set([
-    ...Object.keys(revenueData),
-    ...Object.keys(expenseData)
-  ]);
-
-  const profitData = {};
-  allDates.forEach(date => {
-    const revenue = revenueData[date] || 0;
-    const expense = expenseData[date] || 0;
-    profitData[date] = revenue - expense;
+  // Range selection listeners
+  rangeSelect.addEventListener("change", () => {
+    const isCustom = rangeSelect.value === "custom";
+    startInput.classList.toggle("hidden", !isCustom);
+    endInput.classList.toggle("hidden", !isCustom);
+    updateSummary();
   });
 
-  renderChart("revenueChart", "Revenue ($)", revenueData, "#22DD86");
-  renderChart("expenseChart", "Expenses ($)", expenseData, "#3B82F6");
-  renderChart("profitChart", "Profit ($)", profitData, "#1E1E1E");
-}
+  [startInput, endInput].forEach(el => el.addEventListener("input", updateSummary));
 
-window.addEventListener("DOMContentLoaded", () => {
-  firebase.auth().onAuthStateChanged(user => {
-    if (!user) {
-      window.location.href = "/login.html";
-    } else {
-      setTimeout(() => {
-        loadAllCharts();
-
-        // ✅ Filtering event listeners
-        const timeFilter = document.getElementById("timeFilter");
-        const startDate = document.getElementById("startDate");
-        const endDate = document.getElementById("endDate");
-        const customInputs = document.getElementById("customDateInputs");
-
-        timeFilter.addEventListener("change", () => {
-          const value = timeFilter.value;
-          customInputs.classList.toggle("hidden", value !== "custom");
-
-          if (value === "custom") {
-            console.log("🕓 Waiting for custom date input...");
-            return;
-          }
-
-          loadAllCharts();
-        });
-
-        startDate.addEventListener("change", loadAllCharts);
-        endDate.addEventListener("change", loadAllCharts);
-      }, 100); // ← closes setTimeout
-    }
+  chartRange.addEventListener("change", () => {
+    const show = chartRange.value === "custom";
+    document.getElementById("custom-date-range").classList.toggle("hidden", !show);
+    renderChart();
   });
-}); // ← closes DOMContentLoaded
 
+  [chartStart, chartEnd].forEach(el => el.addEventListener("input", renderChart));
+
+  // Initial load
+  loadData();
+});
