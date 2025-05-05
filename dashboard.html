@@ -45,56 +45,41 @@
     firebase.initializeApp(firebaseConfig);
   </script>
 
-  <!-- Main Content -->
-  <main class="flex-1 flex flex-col px-4 py-8">
+  <!-- Main Layout -->
+  <main class="flex-1 px-4 py-8">
     <div class="w-full max-w-6xl mx-auto space-y-12">
 
-      <!-- Summary Section -->
-      <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md space-y-4">
-        <h2 class="text-xl font-bold text-center">Financial Overview</h2>
-        <div class="flex flex-wrap gap-4 items-center justify-center text-sm">
-          <select id="summary-range" class="input w-40 text-gray-500">
-            <option value="all">All Time</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="year">This Year</option>
-            <option value="custom">Custom Range</option>
-          </select>
-          <input type="date" id="summary-start" class="input w-40 hidden"/>
-          <input type="date" id="summary-end" class="input w-40 hidden"/>
-
-          <div class="text-lg font-semibold">Profit: <span id="summary-profit" class="text-black dark:text-white">$0.00</span></div>
-          <div class="text-lg font-semibold">Revenue: <span id="summary-revenue" class="text-green">$0.00</span></div>
-          <div class="text-lg font-semibold">Expenses: <span id="summary-expenses" class="text-blue">$0.00</span></div>
+      <!-- Summary Grid -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Profit Block -->
+        <div class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow space-y-4">
+          <h2 class="text-xl font-bold text-black dark:text-white text-center">Profit</h2>
+          <div class="text-3xl font-semibold text-center text-black dark:text-white" id="profit-total">$0.00</div>
+          <canvas id="profit-mini-chart" height="80"></canvas>
+          <div class="text-center">
+            <a href="profile.html" class="inline-block bg-black text-white px-4 py-2 rounded hover:bg-opacity-80 transition">View Profit</a>
+          </div>
         </div>
-      </section>
 
-      <!-- Chart Section -->
-      <section class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-md">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg font-semibold text-black dark:text-white">Performance Over Time</h2>
-          <select id="chart-range" class="input w-40 text-gray-500">
-            <option value="all" selected>All Time</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="year">This Year</option>
-            <option value="custom">Custom Range</option>
-          </select>
+        <!-- Revenue Block -->
+        <div class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow space-y-4">
+          <h2 class="text-xl font-bold text-green text-center">Revenue</h2>
+          <div class="text-3xl font-semibold text-center text-green" id="revenue-total">$0.00</div>
+          <canvas id="revenue-mini-chart" height="80"></canvas>
+          <div class="text-center">
+            <a href="revenue.html" class="inline-block bg-green text-white px-4 py-2 rounded hover:bg-opacity-80 transition">View Revenue</a>
+          </div>
         </div>
-        <div id="custom-date-range" class="hidden space-x-2 mb-4">
-          <input type="date" id="chart-start-date" class="input w-40"/>
-          <input type="date" id="chart-end-date" class="input w-40"/>
-        </div>
-        <canvas id="dashboardChart" height="100"></canvas>
-      </section>
 
-      <!-- Button -->
-      <section class="text-center">
-        <a href="index.html" class="inline-block bg-black text-white px-6 py-3 rounded shadow hover:bg-opacity-90 transition">
-          Go to Main Page
-        </a>
+        <!-- Expenses Block -->
+        <div class="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow space-y-4">
+          <h2 class="text-xl font-bold text-blue text-center">Expenses</h2>
+          <div class="text-3xl font-semibold text-center text-blue" id="expenses-total">$0.00</div>
+          <canvas id="expenses-mini-chart" height="80"></canvas>
+          <div class="text-center">
+            <a href="expense.html" class="inline-block bg-blue text-white px-4 py-2 rounded hover:bg-opacity-80 transition">View Expenses</a>
+          </div>
+        </div>
       </section>
 
     </div>
