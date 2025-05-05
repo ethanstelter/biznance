@@ -3,6 +3,12 @@ firebase.auth().onAuthStateChanged(async user => {
 
   const db = firebase.firestore();
 
+  // DOM Elements
+  const rangeSelect = document.getElementById("dashboard-range");
+  const customStart = document.getElementById("dashboard-start-date");
+  const customEnd = document.getElementById("dashboard-end-date");
+  const customRangeWrapper = document.getElementById("dashboard-custom-range");
+
   const profitTotal = document.getElementById("profit-total");
   const revenueTotal = document.getElementById("revenue-total");
   const expensesTotal = document.getElementById("expenses-total");
@@ -12,93 +18,117 @@ firebase.auth().onAuthStateChanged(async user => {
   const expensesCtx = document.getElementById("expenses-mini-chart").getContext("2d");
 
   let profitChart, revenueChart, expensesChart;
+  let revenueData = [], expenseData = [];
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  // Fetch all data
   const [revSnap, expSnap] = await Promise.all([
     db.collection("revenue").where("uid", "==", user.uid).get(),
     db.collection("expenses").where("uid", "==", user.uid).get()
   ]);
 
-  const revEntries = revSnap.docs.map(doc => {
+  revenueData = revSnap.docs.map(doc => {
     const d = doc.data();
-    return {
-      date: d.date?.toDate?.() || new Date(),
-      amount: parseFloat(d.amount)
-    };
+    return { date: d.date?.toDate?.() || new Date(), amount: parseFloat(d.amount) };
   });
 
-  const expEntries = expSnap.docs.map(doc => {
+  expenseData = expSnap.docs.map(doc => {
     const d = doc.data();
-    return {
-      date: d.date?.toDate?.() || new Date(),
-      amount: parseFloat(d.amount)
-    };
+    return { date: d.date?.toDate?.() || new Date(), amount: parseFloat(d.amount) };
   });
 
-  // Filter current month
-  const filteredRevenue = revEntries.filter(e => e.date >= startOfMonth);
-  const filteredExpenses = expEntries.filter(e => e.date >= startOfMonth);
+  function getDateRange(range) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const week = new Date(today);
+    week.setDate(today.getDate() - today.getDay());
+    const month = new Date(now.getFullYear(), now.getMonth(), 1);
+    const year = new Date(now.getFullYear(), 0, 1);
 
-  const totalRevenue = filteredRevenue.reduce((sum, e) => sum + e.amount, 0);
-  const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
-  const totalProfit = totalRevenue - totalExpenses;
+    switch (range) {
+      case "today": return [today, now];
+      case "week": return [week, now];
+      case "month": return [month, now];
+      case "year": return [year, now];
+      case "custom":
+        const start = new Date(customStart.value);
+        const end = new Date(customEnd.value);
+        return [start, end];
+      default: return [null, null];
+    }
+  }
 
-  revenueTotal.textContent = `$${totalRevenue.toFixed(2)}`;
-  expensesTotal.textContent = `$${totalExpenses.toFixed(2)}`;
-  profitTotal.textContent = `$${totalProfit.toFixed(2)}`;
-
-  // Group by day
-  function groupByDay(entries) {
+  function groupByDay(entries, start, end) {
     const grouped = {};
     entries.forEach(e => {
-      const key = `${e.date.getFullYear()}-${String(e.date.getMonth() + 1).padStart(2, "0")}-${String(e.date.getDate()).padStart(2, "0")}`;
+      const date = new Date(e.date);
+      if (start && date < start) return;
+      if (end && date > end) return;
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
       grouped[key] = (grouped[key] || 0) + e.amount;
     });
     return grouped;
   }
 
-  const revenueByDay = groupByDay(filteredRevenue);
-  const expensesByDay = groupByDay(filteredExpenses);
+  function renderAll() {
+    const selected = rangeSelect.value;
+    const [start, end] = getDateRange(selected);
 
-  const allKeys = Array.from(new Set([...Object.keys(revenueByDay), ...Object.keys(expensesByDay)])).sort();
+    const revMap = groupByDay(revenueData, start, end);
+    const expMap = groupByDay(expenseData, start, end);
+    const allKeys = Array.from(new Set([...Object.keys(revMap), ...Object.keys(expMap)])).sort();
 
-  const labels = allKeys;
-  const revenueData = labels.map(k => revenueByDay[k] || 0);
-  const expensesData = labels.map(k => expensesByDay[k] || 0);
-  const profitData = labels.map((_, i) => revenueData[i] - expensesData[i]);
+    const labels = allKeys;
+    const revVals = labels.map(k => revMap[k] || 0);
+    const expVals = labels.map(k => expMap[k] || 0);
+    const profitVals = labels.map((_, i) => revVals[i] - expVals[i]);
 
-  function createChart(ctx, label, data, color) {
-    return new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label,
-          data,
-          borderColor: color,
-          backgroundColor: `${color}33`,
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      options: {
-        plugins: {
-          legend: { display: false },
-          tooltip: { mode: "index", intersect: false }
+    // Totals
+    const totalRev = revVals.reduce((a, b) => a + b, 0);
+    const totalExp = expVals.reduce((a, b) => a + b, 0);
+    const totalProfit = totalRev - totalExp;
+
+    revenueTotal.textContent = `$${totalRev.toFixed(2)}`;
+    expensesTotal.textContent = `$${totalExp.toFixed(2)}`;
+    profitTotal.textContent = `$${totalProfit.toFixed(2)}`;
+
+    // Chart Drawing
+    function drawChart(ctx, data, color, label, oldChart) {
+      if (oldChart) oldChart.destroy();
+      return new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data,
+            borderColor: color,
+            backgroundColor: `${color}33`,
+            fill: true,
+            tension: 0.4
+          }]
         },
-        responsive: true,
-        scales: {
-          x: { display: false },
-          y: { display: false }
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { display: false },
+            y: { display: false }
+          }
         }
-      }
-    });
+      });
+    }
+
+    revenueChart = drawChart(revenueCtx, revVals, "#22DD86", "Revenue", revenueChart);
+    expensesChart = drawChart(expensesCtx, expVals, "#3B82F6", "Expenses", expensesChart);
+    profitChart = drawChart(profitCtx, profitVals, "#1E1E1E", "Profit", profitChart);
   }
 
-  revenueChart = createChart(revenueCtx, "Revenue", revenueData, "#22DD86");
-  expensesChart = createChart(expensesCtx, "Expenses", expensesData, "#3B82F6");
-  profitChart = createChart(profitCtx, "Profit", profitData, "#1E1E1E");
+  // Event Listeners
+  rangeSelect.addEventListener("change", () => {
+    const isCustom = rangeSelect.value === "custom";
+    customRangeWrapper.classList.toggle("hidden", !isCustom);
+    renderAll();
+  });
+
+  [customStart, customEnd].forEach(input => input.addEventListener("input", renderAll));
+
+  renderAll(); // Initial load
 });
