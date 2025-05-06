@@ -68,10 +68,19 @@
 
   // Load user email
   firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-      document.getElementById("userEmail").textContent = user.email;
+  if (user) {
+    // Load email
+    document.getElementById("userEmail").textContent = user.email;
+
+    // Load Gmail profile image (if available)
+    if (user.photoURL) {
+      document.getElementById("profileImage").src = user.photoURL;
+    } else {
+      document.getElementById("profileImage").src = "https://via.placeholder.com/48?text=?"; // fallback
     }
-  });
+  }
+});
+
 
   // Highlight active page
   const currentPage = location.pathname.split("/").pop();
