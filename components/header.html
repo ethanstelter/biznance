@@ -5,7 +5,7 @@
     <img src="assets/BIZNANCE%20-%20Word%20Mark%20-%20Logo%20-%20Transparent.png" alt="Biznance Logo" class="h-12 w-auto" id="bizLogo">
   </div>
 
-  <!-- Right: Navigation and Settings -->
+  <!-- Right: Navigation + Settings -->
   <div class="flex items-center gap-6">
     <!-- Desktop Navigation -->
     <nav class="hidden md:flex gap-6 text-sm font-medium" id="navLinks">
@@ -15,18 +15,10 @@
       <a href="expenses.html" class="nav-link text-gray-600 hover:text-black">Expenses</a>
     </nav>
 
-    <!-- Settings Icon & Popup -->
-    <div class="relative">
-      <button id="settingsBtn" class="rounded-full p-2 hover:bg-gray-200 focus:outline-none">
-        <i class="lucide lucide-cog w-5 h-5 text-gray-600"></i>
-      </button>
-
-      <!-- Popup -->
-      <div id="settingsPopup" class="hidden absolute right-0 mt-2 w-60 bg-white border rounded-lg shadow-lg py-4 px-4 text-sm z-50">
-        <div class="text-xs text-gray-700 text-center mb-3" id="userEmail">Loading...</div>
-        <a href="settings.html" class="block text-blue-600 text-center hover:underline">Settings</a>
-      </div>
-    </div>
+    <!-- Settings Icon (just a link) -->
+    <a href="settings.html" class="p-2 rounded hover:bg-gray-100 focus:outline-none" aria-label="Settings">
+      <i class="lucide lucide-cog w-5 h-5 text-gray-600"></i>
+    </a>
 
     <!-- Hamburger Button (Mobile Only) -->
     <button id="hamburgerBtn" class="md:hidden p-2 rounded hover:bg-gray-100 focus:outline-none">
@@ -51,28 +43,6 @@
 
 <!-- Header Script -->
 <script>
-  // Toggle settings popup
-  const settingsBtn = document.getElementById("settingsBtn");
-  const settingsPopup = document.getElementById("settingsPopup");
-
-  settingsBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    settingsPopup.classList.toggle("hidden");
-  });
-
-  window.addEventListener("click", (e) => {
-    if (!settingsPopup.contains(e.target) && !settingsBtn.contains(e.target)) {
-      settingsPopup.classList.add("hidden");
-    }
-  });
-
-  // Load user email from Firebase
-  firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-      document.getElementById("userEmail").textContent = user.email;
-    }
-  });
-
   // Highlight active nav link
   const currentPage = location.pathname.split("/").pop();
   document.querySelectorAll(".nav-link").forEach(link => {
