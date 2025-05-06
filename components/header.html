@@ -22,9 +22,9 @@
   <div class="flex items-center gap-4">
     <!-- Profile Icon -->
     <div class="relative">
-      <button id="profileBtn" class="rounded-full bg-gray-200 p-2 hover:bg-gray-300 focus:outline-none">
-        <i class="lucide lucide-user w-5 h-5 text-gray-600"></i>
-      </button>
+        <button id="profileBtn" class="rounded-full bg-gray-200 p-1 hover:bg-gray-300 focus:outline-none h-8 w-8">
+  <img id="miniProfileImage" src="https://via.placeholder.com/32?text=?" class="rounded-full h-full w-full object-cover" alt="Profile">
+</button>
       <!-- Profile Popup -->
      <div id="profilePopup" class="hidden absolute right-0 mt-2 w-60 bg-white border rounded-lg shadow-lg py-4 px-4 text-sm z-50">
   <div class="flex flex-col items-center gap-2 mb-2">
@@ -65,6 +65,10 @@
       profilePopup.classList.add("hidden");
     }
   });
+
+  if (user.photoURL) {
+  document.getElementById("miniProfileImage").src = user.photoURL;
+}
 
   // Load user email
   firebase.auth().onAuthStateChanged((user) => {
