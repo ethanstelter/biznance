@@ -1,64 +1,17 @@
-<!-- Header -->
-<header class="w-full bg-white shadow-md px-8 py-3 flex justify-between items-center sticky top-0 z-50">
-  <!-- Left: Logo -->
-  <div class="flex items-center gap-2">
-    <img src="assets/BIZNANCE%20-%20Word%20Mark%20-%20Logo%20-%20Transparent.png" alt="Biznance Logo" class="h-12 w-auto" id="bizLogo">
-  </div>
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body>
+    <a href="settings.html" class="p-4 block">
+      <i data-lucide="cog" class="w-8 h-8 text-black"></i>
+    </a>
 
-  <!-- Right: Navigation + Settings -->
-  <div class="flex items-center gap-6">
-    <!-- Desktop Navigation -->
-    <nav class="hidden md:flex gap-6 text-sm font-medium" id="navLinks">
-      <a href="dashboard.html" class="nav-link text-gray-600 hover:text-black">Dashboard</a>
-      <a href="profit.html" class="nav-link text-gray-600 hover:text-black">Profit</a>
-      <a href="revenue.html" class="nav-link text-gray-600 hover:text-black">Revenue</a>
-      <a href="expenses.html" class="nav-link text-gray-600 hover:text-black">Expenses</a>
-    </nav>
-
-    <!-- Settings Icon (black gear) -->
-<a href="settings.html" class="p-2 rounded hover:bg-gray-100 focus:outline-none" aria-label="Settings">
-  <i data-lucide="cog" class="w-5 h-5 text-black"></i>
-</a>
-
-    <!-- Hamburger Button (Mobile Only) -->
-    <button id="hamburgerBtn" class="md:hidden p-2 rounded hover:bg-gray-100 focus:outline-none">
-      <i class="lucide lucide-menu w-5 h-5 text-gray-600"></i>
-    </button>
-  </div>
-</header>
-
-<!-- Mobile Navigation -->
-<nav id="mobileNav" class="hidden md:hidden px-8 py-3 bg-white shadow border-t space-y-3 text-sm font-medium">
-  <a href="dashboard.html" class="block nav-link text-gray-600 hover:text-black">Dashboard</a>
-  <a href="profit.html" class="block nav-link text-gray-600 hover:text-black">Profit</a>
-  <a href="revenue.html" class="block nav-link text-gray-600 hover:text-black">Revenue</a>
-  <a href="expenses.html" class="block nav-link text-gray-600 hover:text-black">Expenses</a>
-</nav>
-
-
-<!-- Header Script -->
-<script>
-  // Highlight active nav link
-  const currentPage = location.pathname.split("/").pop();
-  document.querySelectorAll(".nav-link").forEach(link => {
-    if (link.getAttribute("href") === currentPage) {
-      link.classList.add("text-black", "font-semibold");
-    }
-  });
-
-  // Toggle mobile nav menu
-  const hamburgerBtn = document.getElementById("hamburgerBtn");
-  const mobileNav = document.getElementById("mobileNav");
-
-  hamburgerBtn.addEventListener("click", () => {
-    mobileNav.classList.toggle("hidden");
-  });
-
-  <script src="https://unpkg.com/lucide@latest"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    lucide.createIcons();
-  });
-</script>
-
-</script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        lucide.createIcons();
+      });
+    </script>
+  </body>
+</html>
