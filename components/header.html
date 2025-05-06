@@ -5,35 +5,30 @@
     <img src="assets/BIZNANCE%20-%20Word%20Mark%20-%20Logo%20-%20Transparent.png" alt="Biznance Logo" class="h-12 w-auto" id="bizLogo">
   </div>
 
-  <script src="https://unpkg.com/lucide@latest"></script>
-<script>
-  lucide.createIcons();
-</script>
-
   <!-- Center: Desktop Navigation -->
   <nav class="hidden md:flex gap-6 text-sm font-medium" id="navLinks">
     <a href="dashboard.html" class="nav-link text-gray-600 hover:text-black">Dashboard</a>
     <a href="profit.html" class="nav-link text-gray-600 hover:text-black">Profit</a>
     <a href="revenue.html" class="nav-link text-gray-600 hover:text-black">Revenue</a>
-    <a href="expense.html" class="nav-link text-gray-600 hover:text-black">Expenses</a>
+    <a href="expenses.html" class="nav-link text-gray-600 hover:text-black">Expenses</a>
   </nav>
 
   <!-- Right: Profile + Hamburger -->
   <div class="flex items-center gap-4">
     <!-- Profile Icon -->
     <div class="relative">
-        <button id="profileBtn" class="rounded-full bg-gray-200 p-1 hover:bg-gray-300 focus:outline-none h-8 w-8">
-  <img id="miniProfileImage" src="https://via.placeholder.com/32?text=?" class="rounded-full h-full w-full object-cover" alt="Profile">
-</button>
+      <button id="profileBtn" class="rounded-full p-1 hover:bg-gray-200 focus:outline-none h-9 w-9">
+        <img id="miniProfileImage" src="https://via.placeholder.com/40?text=?" alt="Profile" class="rounded-full w-full h-full object-cover">
+      </button>
 
       <!-- Profile Popup -->
-     <div id="profilePopup" class="hidden absolute right-0 mt-2 w-60 bg-white border rounded-lg shadow-lg py-4 px-4 text-sm z-50">
-  <div class="flex flex-col items-center gap-2 mb-2">
-    <img id="profileImage" src="" alt="Profile" class="h-14 w-14 rounded-full bg-gray-300 object-cover">
-    <div id="userEmail" class="text-xs text-gray-700 text-center">Loading...</div>
-  </div>
-  <a href="settings.html" class="block text-blue-600 text-center hover:underline">Settings</a>
-</div>
+      <div id="profilePopup" class="hidden absolute right-0 mt-2 w-60 bg-white border rounded-lg shadow-lg py-4 px-4 text-sm z-50">
+        <div class="flex flex-col items-center gap-2 mb-2">
+          <img id="profileImage" src="https://via.placeholder.com/56?text=?" alt="Profile" class="h-14 w-14 rounded-full object-cover">
+          <div id="userEmail" class="text-xs text-gray-700 text-center">Loading...</div>
+        </div>
+        <a href="settings.html" class="block text-blue-600 text-center hover:underline">Settings</a>
+      </div>
     </div>
 
     <!-- Hamburger Button (Mobile Only) -->
@@ -43,7 +38,7 @@
   </div>
 </header>
 
-<!-- Mobile Nav -->
+<!-- Mobile Navigation -->
 <nav id="mobileNav" class="hidden md:hidden px-6 py-3 bg-white shadow border-t space-y-3 text-sm font-medium">
   <a href="dashboard.html" class="block nav-link text-gray-600 hover:text-black">Dashboard</a>
   <a href="profit.html" class="block nav-link text-gray-600 hover:text-black">Profit</a>
@@ -51,39 +46,41 @@
   <a href="expenses.html" class="block nav-link text-gray-600 hover:text-black">Expenses</a>
 </nav>
 
-<!-- Inline JS -->
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
 <script>
+  lucide.createIcons();
+</script>
 
-  document.getElementById('profileBtn').addEventListener('click', () => {
-  console.log("Clicked profileBtn!");
-});
-
+<!-- Header Script -->
+<script>
   // Toggle profile popup
   const profileBtn = document.getElementById("profileBtn");
   const profilePopup = document.getElementById("profilePopup");
 
-  profileBtn.addEventListener("click", () => {
+  profileBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
     profilePopup.classList.toggle("hidden");
   });
 
   window.addEventListener("click", (e) => {
-    if (!profileBtn.contains(e.target) && !profilePopup.contains(e.target)) {
+    if (!profilePopup.contains(e.target) && !profileBtn.contains(e.target)) {
       profilePopup.classList.add("hidden");
     }
   });
 
+  // Load Firebase user info (email and profile picture)
   firebase.auth().onAuthStateChanged((user) => {
-  if (user) {
-    document.getElementById("userEmail").textContent = user.email;
-    if (user.photoURL) {
-      document.getElementById("profileImage").src = user.photoURL;
-      document.getElementById("miniProfileImage").src = user.photoURL;
+    if (user) {
+      document.getElementById("userEmail").textContent = user.email;
+
+      const profileImg = user.photoURL || "https://via.placeholder.com/56?text=?";
+      document.getElementById("profileImage").src = profileImg;
+      document.getElementById("miniProfileImage").src = profileImg;
     }
-  }
-});
+  });
 
-
-  // Highlight active page
+  // Highlight active nav link
   const currentPage = location.pathname.split("/").pop();
   document.querySelectorAll(".nav-link").forEach(link => {
     if (link.getAttribute("href") === currentPage) {
@@ -91,7 +88,7 @@
     }
   });
 
-  // Toggle mobile menu
+  // Toggle mobile nav menu
   const hamburgerBtn = document.getElementById("hamburgerBtn");
   const mobileNav = document.getElementById("mobileNav");
 
