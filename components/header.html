@@ -41,14 +41,12 @@
   <a href="revenue.html" class="block nav-link text-gray-500 hover:text-black transition-colors">Revenue</a>
   <a href="expenses.html" class="block nav-link text-gray-500 hover:text-black transition-colors">Expenses</a>
 </nav>
-<style>
-  .active-link {
-    @apply text-black font-bold;
-  }
-</style>
 
 <!-- Script: Active Link + Mobile Toggle -->
 <script>
+  link.classList.remove("text-gray-500");
+link.classList.add("text-black", "font-bold");
+
   document.addEventListener("DOMContentLoaded", () => {
     const currentPage = location.pathname.split("/").pop().toLowerCase();
 
