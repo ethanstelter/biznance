@@ -44,19 +44,24 @@
 
 <!-- Script: Active Link + Mobile Toggle -->
 <script>
-  // Highlight active nav link
-  const currentPage = location.pathname.split("/").pop();
-  document.querySelectorAll(".nav-link").forEach(link => {
-    if (link.getAttribute("href") === currentPage) {
-      link.classList.add("text-black", "font-semibold");
-    }
-  });
+  document.addEventListener("DOMContentLoaded", () => {
+    const currentPage = location.pathname.split("/").pop().toLowerCase();
 
-  // Toggle mobile nav menu
-  const hamburgerBtn = document.getElementById("hamburgerBtn");
-  const mobileNav = document.getElementById("mobileNav");
+    document.querySelectorAll(".nav-link").forEach(link => {
+      const hrefPage = link.getAttribute("href").split("/").pop().toLowerCase();
+      if (hrefPage === currentPage) {
+        link.classList.remove("text-gray-500");
+        link.classList.add("text-black", "font-semibold");
+      }
+    });
 
-  hamburgerBtn.addEventListener("click", () => {
-    mobileNav.classList.toggle("hidden");
+    // Mobile menu toggle
+    const hamburgerBtn = document.getElementById("hamburgerBtn");
+    const mobileNav = document.getElementById("mobileNav");
+
+    hamburgerBtn.addEventListener("click", () => {
+      mobileNav.classList.toggle("hidden");
+    });
   });
 </script>
+
